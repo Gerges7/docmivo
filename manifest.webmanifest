@@ -1,0 +1,10 @@
+{
+  "name": "DocMivo — أدوات PDF مجانية",
+  "short_name": "DocMivo",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#635bff",
+  "icons": [],
+  "description": "DocMivo — 34 أداة PDF مجانية وسريعة تعمل من المتصفح."
+}
