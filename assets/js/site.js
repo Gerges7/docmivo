@@ -11,4 +11,20 @@
  function filter(){ const q=(search?.value||'').toLowerCase().trim(); cards.forEach(card=>{ const okCat=cat==='all'||card.dataset.cat===cat; const okQ=!q||card.textContent.toLowerCase().includes(q); card.style.display=okCat&&okQ?'flex':'none'; }); }
  if(search) search.addEventListener('input',filter);
  chips.forEach(ch=>ch.addEventListener('click',()=>{chips.forEach(x=>x.classList.remove('active'));ch.classList.add('active');cat=ch.dataset.cat;filter();}));
+ // Google CMP consent-revocation link: reveal only when the consent API is ready and GDPR applies.
+ const privacyLink=document.getElementById('privacy-settings-link');
+ if(privacyLink){
+   window.googlefc=window.googlefc||{};
+   window.googlefc.callbackQueue=window.googlefc.callbackQueue||[];
+   privacyLink.addEventListener('click',(e)=>{e.preventDefault();try{window.googlefc?.showRevocationMessage?.();}catch{}});
+   window.googlefc.callbackQueue.push({'CONSENT_API_READY':()=>{
+     try{
+       if(typeof window.__tcfapi!=='function') return;
+       window.__tcfapi('addEventListener',2,(tcdata,success)=>{
+         if(success&&tcdata&&tcdata.gdprApplies) privacyLink.style.display='block';
+       });
+     }catch{}
+   }});
+ }
+
 })();

@@ -1,47 +1,17 @@
-# DocMivo — static PDF toolbox
+# DocMivo
 
-نسخة إطلاق أولى جاهزة للنشر كموقع Static.
+Production static site for https://getdocmivo.com.
 
-## تشغيل محلي
-لا تفتح index.html مباشرة فقط؛ شغّل HTTP server حتى تعمل بعض المكتبات بشكل سليم:
+## V6 status
+- 43 browser-based PDF tools
+- 16 expanded Arabic guides
+- GA4: G-DH1KMJYRZV
+- AdSense publisher: ca-pub-1551519098591089
+- Root ads.txt enabled
+- Google CMP privacy settings/revocation link integration
+- Organization / WebApplication / FAQ / Breadcrumb / Article structured data
+- OG image + brand logo assets
+- Expanded About, Contact, Privacy, Terms and Cookies pages
 
-```bash
-python -m http.server 8000
-```
-ثم افتح http://localhost:8000
-
-## قبل النشر
-1. افتح `assets/js/config.js` وغيّر اسم الموقع والدومين والبريد.
-2. استبدل `https://getdocmivo.com` بالدومين الحقيقي في ملفات HTML و robots.txt و sitemap.xml.
-3. لا تضف AdSense Publisher ID قبل تجهيز الدومين وصفحات المحتوى والموافقة.
-4. بعد قبول AdSense ضع `ca-pub-...` في `adsenseClient` داخل `config.js`.
-5. استبدل `ads.txt` بالسطر الذي يقدمه Google.
-
-## الأدوات الحالية
-Merge, Split, Compress (raster), Rotate, Delete pages, Extract pages, Reorder pages, PDF→JPG, PDF→PNG, Images→PDF, Watermark, Page numbers, Extract text, OCR, PDF info, Remove metadata, Text→PDF.
-
-## ملاحظات تقنية
-- الأدوات تعمل Client-side باستخدام PDF-Lib وPDF.js وJSZip وTesseract.js وjsPDF عبر CDN.
-- ضغط PDF الحالي يعيد رسم الصفحات كصور، وقد يفقد النص القابل للتحديد.
-- OCR قد يكون بطيئًا على الهواتف القديمة.
-- تحويلات Office/PDF عالية الدقة تحتاج backend متخصص أو WebAssembly إضافي، وهي المرحلة التالية بعد إطلاق النسخة الأولى.
-
-## Vercel
-المشروع Static بالكامل. في Vercel استخدم Project Name: `docmivo` وFramework Preset: `Other` واترك Build Command فارغًا وOutput Directory = `.`.
-
-## رابط الإطلاق المستهدف
-https://getdocmivo.com
-
-
-## V2 status
-
-DocMivo V2 contains 34 browser-based document/PDF tools. See `ROADMAP.md` for the high-fidelity conversion, security, batch, and AI roadmap.
-
-
-## V5
-- 43 browser tools
-- 16 practical guides
-- WebApplication + FAQ + Breadcrumb structured data on tool pages
-- GA4 tool_start and file_download events
-- AdSense verification/Auto Ads loader deduplicated
-- Sitemap expanded to 66 clean URLs
+## Important product constraints
+Some browser conversions are approximate. Always review generated files before professional, legal, financial, archival or print use.

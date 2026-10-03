@@ -53,3 +53,20 @@
 - GA4 event dashboards
 - Search Console indexing tracker
 - AdSense review + Google CMP
+
+
+## V6 trust / SEO completed
+- Expanded trust and legal pages
+- Full Article schema fields + brand/OG assets
+- Consent revocation link integration for Google CMP
+- Expanded guide content and metadata
+
+## Next high-value tools
+- Protect / Unlock PDF
+- Searchable OCR PDF
+- PDF → Word / Excel high-fidelity pipelines
+- PowerPoint → PDF
+- PDF/A validation/conversion
+- Repair PDF
+- True destructive redaction
+- Batch processing

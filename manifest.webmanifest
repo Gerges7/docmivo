@@ -5,6 +5,19 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#635bff",
-  "icons": [],
-  "description": "DocMivo — 34 أداة PDF مجانية وسريعة تعمل من المتصفح."
+  "icons": [
+    {
+      "src": "/assets/brand/docmivo-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "description": "43+ أداة PDF مجانية مع أولوية للخصوصية والمعالجة داخل المتصفح."
 }
