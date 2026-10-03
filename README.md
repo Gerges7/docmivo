@@ -55,3 +55,9 @@ Set `GEMINI_API_KEY` in Vercel Project Settings → Environment Variables before
 Optional: set `GEMINI_MODEL` (defaults to `gemini-3.8-flash`).
 
 AI pages are `noindex` during beta until they are tested in production. Direct file upload is capped around 3.5 MB to stay under Vercel's 4.5 MB Function request-body limit. Larger text PDFs can fall back to local text extraction in the browser.
+
+
+## V12
+- Gemini default changed to `gemini-3.5-flash-lite` for a clearly documented Free Tier target.
+- Word → PDF now uses `docx-preview` for higher-fidelity browser rendering and the browser print engine for PDF output.
+- Word files remain local to the browser in this conversion path.
