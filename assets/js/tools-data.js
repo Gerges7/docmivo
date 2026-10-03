@@ -33,4 +33,14 @@ window.DOCMIVO_TOOLS = [
  {"slug":"html-to-pdf","icon":"🌐","cat":"convert","title":"HTML إلى PDF","desc":"حوّل كود HTML أو ملف HTML محلي إلى PDF مباشرة من المتصفح.","accept":".html,.htm,text/html","multiple":false,"noFile":true},
  {"slug":"markdown-to-pdf","icon":"Ⓜ️","cat":"convert","title":"Markdown إلى PDF","desc":"حوّل Markdown إلى PDF منسق مع العناوين والقوائم والجداول الأساسية.","accept":".md,.markdown,text/markdown,text/plain","multiple":false,"noFile":true},
  {"slug":"edit-metadata","icon":"🏷️","cat":"security","title":"تعديل بيانات PDF","desc":"عدّل Title وAuthor وSubject وKeywords داخل ملف PDF.","accept":".pdf","multiple":false,"noFile":false},
+ {"slug":"bates-numbering","icon":"🔢","cat":"edit","title":"Bates Numbering","desc":"أضف ترقيم Bates متسلسلًا مع Prefix وSuffix للمستندات القانونية والأرشيفية.","accept":".pdf","multiple":false,"noFile":false},
+ {"slug":"headers-footers","icon":"↕️","cat":"edit","title":"رؤوس وتذييلات PDF","desc":"أضف Header وFooter إلى كل الصفحات مع دعم أرقام الصفحات والنص العربي.","accept":".pdf","multiple":false,"noFile":false},
+ {"slug":"n-up-pdf","icon":"▦","cat":"organize","title":"N-up PDF","desc":"ضع صفحتين أو أربع صفحات PDF في ورقة واحدة لتقليل استهلاك الورق.","accept":".pdf","multiple":false,"noFile":false},
+ {"slug":"booklet-pdf","icon":"📖","cat":"organize","title":"إنشاء Booklet PDF","desc":"رتّب صفحات PDF للطباعة ككتيب مطوي مع صفحتين في كل وجه.","accept":".pdf","multiple":false,"noFile":false},
+ {"slug":"add-margins-pdf","icon":"⬚","cat":"edit","title":"إضافة هوامش PDF","desc":"أضف مساحة بيضاء حول الصفحات مع التحكم في كل هامش بالملليمتر.","accept":".pdf","multiple":false,"noFile":false},
+ {"slug":"remove-blank-pages","icon":"🧽","cat":"optimize","title":"حذف الصفحات الفارغة","desc":"اكتشف الصفحات شبه الفارغة تلقائيًا واحذفها باستخدام تحليل بصري محلي.","accept":".pdf","multiple":false,"noFile":false},
+ {"slug":"compare-pdf","icon":"🆚","cat":"security","title":"مقارنة ملفي PDF","desc":"قارن ملفي PDF بصريًا صفحة بصفحة واحصل على صور توضح مناطق الاختلاف.","accept":".pdf","multiple":true,"noFile":false},
+ {"slug":"inspect-pdf-forms","icon":"🧾","cat":"security","title":"فحص حقول PDF","desc":"اعرض أسماء وأنواع وقيم حقول النماذج التفاعلية داخل PDF وصدّرها JSON.","accept":".pdf","multiple":false,"noFile":false},
+ {"slug":"fill-pdf-form","icon":"✅","cat":"edit","title":"تعبئة نموذج PDF","desc":"املأ حقول PDF التفاعلية باستخدام JSON ثم احفظ نسخة جديدة اختيارياً بعد Flatten.","accept":".pdf","multiple":false,"noFile":false},
+
 ];

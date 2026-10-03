@@ -1,52 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://getdocmivo.com/</loc></url>
   <url><loc>https://getdocmivo.com/about</loc></url>
   <url><loc>https://getdocmivo.com/contact</loc></url>
+  <url><loc>https://getdocmivo.com/privacy</loc></url>
+  <url><loc>https://getdocmivo.com/terms</loc></url>
   <url><loc>https://getdocmivo.com/cookies</loc></url>
+  <url><loc>https://getdocmivo.com/guides</loc></url>
+  <url><loc>https://getdocmivo.com/tools/merge-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/split-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/compress-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/rotate-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/delete-pages</loc></url>
+  <url><loc>https://getdocmivo.com/tools/extract-pages</loc></url>
+  <url><loc>https://getdocmivo.com/tools/reorder-pages</loc></url>
+  <url><loc>https://getdocmivo.com/tools/pdf-to-jpg</loc></url>
+  <url><loc>https://getdocmivo.com/tools/pdf-to-png</loc></url>
+  <url><loc>https://getdocmivo.com/tools/images-to-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/watermark-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/page-numbers</loc></url>
+  <url><loc>https://getdocmivo.com/tools/extract-text</loc></url>
+  <url><loc>https://getdocmivo.com/tools/ocr-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/pdf-info</loc></url>
+  <url><loc>https://getdocmivo.com/tools/remove-metadata</loc></url>
+  <url><loc>https://getdocmivo.com/tools/text-to-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/sign-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/add-text-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/add-image-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/crop-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/resize-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/grayscale-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/flatten-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/reverse-pages</loc></url>
+  <url><loc>https://getdocmivo.com/tools/duplicate-pages</loc></url>
+  <url><loc>https://getdocmivo.com/tools/mix-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/pdf-to-webp</loc></url>
+  <url><loc>https://getdocmivo.com/tools/pdf-to-powerpoint</loc></url>
+  <url><loc>https://getdocmivo.com/tools/word-to-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/excel-to-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/html-to-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/markdown-to-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/edit-metadata</loc></url>
+  <url><loc>https://getdocmivo.com/tools/bates-numbering</loc></url>
+  <url><loc>https://getdocmivo.com/tools/headers-footers</loc></url>
+  <url><loc>https://getdocmivo.com/tools/n-up-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/booklet-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/add-margins-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/remove-blank-pages</loc></url>
+  <url><loc>https://getdocmivo.com/tools/compare-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/tools/inspect-pdf-forms</loc></url>
+  <url><loc>https://getdocmivo.com/tools/fill-pdf-form</loc></url>
+  <url><loc>https://getdocmivo.com/guides/bates-numbering-guide</loc></url>
+  <url><loc>https://getdocmivo.com/guides/compare-pdf-guide</loc></url>
   <url><loc>https://getdocmivo.com/guides/compress-pdf-guide</loc></url>
   <url><loc>https://getdocmivo.com/guides/images-to-pdf-guide</loc></url>
-  <url><loc>https://getdocmivo.com/guides</loc></url>
   <url><loc>https://getdocmivo.com/guides/merge-pdf-guide</loc></url>
+  <url><loc>https://getdocmivo.com/guides/metadata-pdf-guide</loc></url>
+  <url><loc>https://getdocmivo.com/guides/n-up-booklet-guide</loc></url>
   <url><loc>https://getdocmivo.com/guides/ocr-guide</loc></url>
+  <url><loc>https://getdocmivo.com/guides/pdf-forms-guide</loc></url>
   <url><loc>https://getdocmivo.com/guides/pdf-page-numbers-guide</loc></url>
   <url><loc>https://getdocmivo.com/guides/pdf-privacy-guide</loc></url>
   <url><loc>https://getdocmivo.com/guides/pdf-to-jpg-guide</loc></url>
+  <url><loc>https://getdocmivo.com/guides/sign-pdf-guide</loc></url>
   <url><loc>https://getdocmivo.com/guides/split-pdf-guide</loc></url>
-  <url><loc>https://getdocmivo.com/</loc></url>
-  <url><loc>https://getdocmivo.com/privacy</loc></url>
-  <url><loc>https://getdocmivo.com/terms</loc></url>
-  <url><loc>https://getdocmivo.com/tools/add-image-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/add-text-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/compress-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/crop-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/delete-pages</loc></url>
-  <url><loc>https://getdocmivo.com/tools/duplicate-pages</loc></url>
-  <url><loc>https://getdocmivo.com/tools/edit-metadata</loc></url>
-  <url><loc>https://getdocmivo.com/tools/excel-to-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/extract-pages</loc></url>
-  <url><loc>https://getdocmivo.com/tools/extract-text</loc></url>
-  <url><loc>https://getdocmivo.com/tools/flatten-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/grayscale-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/html-to-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/images-to-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/markdown-to-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/merge-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/mix-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/ocr-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/page-numbers</loc></url>
-  <url><loc>https://getdocmivo.com/tools/pdf-info</loc></url>
-  <url><loc>https://getdocmivo.com/tools/pdf-to-jpg</loc></url>
-  <url><loc>https://getdocmivo.com/tools/pdf-to-png</loc></url>
-  <url><loc>https://getdocmivo.com/tools/pdf-to-powerpoint</loc></url>
-  <url><loc>https://getdocmivo.com/tools/pdf-to-webp</loc></url>
-  <url><loc>https://getdocmivo.com/tools/remove-metadata</loc></url>
-  <url><loc>https://getdocmivo.com/tools/reorder-pages</loc></url>
-  <url><loc>https://getdocmivo.com/tools/resize-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/reverse-pages</loc></url>
-  <url><loc>https://getdocmivo.com/tools/rotate-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/sign-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/split-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/text-to-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/watermark-pdf</loc></url>
-  <url><loc>https://getdocmivo.com/tools/word-to-pdf</loc></url>
+  <url><loc>https://getdocmivo.com/guides/watermark-pdf-guide</loc></url>
+  <url><loc>https://getdocmivo.com/guides/word-to-pdf-guide</loc></url>
 </urlset>

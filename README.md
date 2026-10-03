@@ -36,3 +36,12 @@ https://getdocmivo.com
 ## V2 status
 
 DocMivo V2 contains 34 browser-based document/PDF tools. See `ROADMAP.md` for the high-fidelity conversion, security, batch, and AI roadmap.
+
+
+## V5
+- 43 browser tools
+- 16 practical guides
+- WebApplication + FAQ + Breadcrumb structured data on tool pages
+- GA4 tool_start and file_download events
+- AdSense verification/Auto Ads loader deduplicated
+- Sitemap expanded to 66 clean URLs

@@ -1,42 +1,40 @@
 # DocMivo Roadmap
 
-## Live / V2 browser tools
+## Live target after V5 — 43 browser tools
 - Merge, Split, Compress, Rotate, Delete, Extract, Reorder
 - PDF → JPG / PNG / WebP
 - Images → PDF
-- Watermark, Page Numbers
+- Watermark, Page Numbers, Bates Numbering, Headers & Footers
 - Extract Text, OCR
 - PDF Info, Remove Metadata, Edit Metadata
 - Text → PDF
 - Sign PDF, Add Text, Add Image
-- Crop PDF, Resize PDF, Grayscale PDF, Flatten PDF
+- Crop PDF, Resize PDF, Add Margins, Grayscale PDF, Flatten PDF
 - Reverse Pages, Duplicate Pages, Mix PDFs
+- N-up PDF, Booklet PDF, Remove Blank Pages
+- Compare PDFs
+- Inspect PDF Forms, Fill PDF Forms
 - PDF → PowerPoint
 - Word → PDF
 - Excel → PDF
 - HTML → PDF
 - Markdown → PDF
 
-## V3 — high-fidelity conversion / WASM or backend
+## Next — high-fidelity conversion / WASM or backend
 - PDF → Word with layout reconstruction
 - PDF → Excel with table detection
 - PowerPoint → PDF
 - PDF/A conversion + validation
 - Protect PDF (AES password encryption)
-- Unlock PDF (with owner/user password supplied by the user)
+- Unlock PDF with user-supplied password
 - Repair damaged PDF structures
 - OCR → searchable PDF with text layer
 - Scan to PDF with mobile camera workflow
 - Extract embedded images
-- Compare two PDFs with visual diff
-- Redact sensitive text/areas with destructive redaction
-- Bates numbering
-- Booklet / N-up layout
-- Headers & footers
-- Form filling / form field inspection
-- Batch queue across multiple operations
+- Destructive redaction
+- Advanced batch queue
 
-## V4 — AI productivity
+## AI productivity
 - Ask PDF / summarize PDF
 - Translate PDF text
 - Explain document sections
@@ -51,7 +49,7 @@
 - PWA offline mode for local tools
 - Processing history stored locally
 - Favorites / recent tools
-- SEO guide hub
-- Google Search Console + GA4
-- AdSense + certified consent platform
-- Custom domain
+- More SEO guide content
+- GA4 event dashboards
+- Search Console indexing tracker
+- AdSense review + Google CMP
