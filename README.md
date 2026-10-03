@@ -12,7 +12,7 @@ python -m http.server 8000
 
 ## قبل النشر
 1. افتح `assets/js/config.js` وغيّر اسم الموقع والدومين والبريد.
-2. استبدل `https://docmivo.vercel.app` بالدومين الحقيقي في ملفات HTML و robots.txt و sitemap.xml.
+2. استبدل `https://getdocmivo.com` بالدومين الحقيقي في ملفات HTML و robots.txt و sitemap.xml.
 3. لا تضف AdSense Publisher ID قبل تجهيز الدومين وصفحات المحتوى والموافقة.
 4. بعد قبول AdSense ضع `ca-pub-...` في `adsenseClient` داخل `config.js`.
 5. استبدل `ads.txt` بالسطر الذي يقدمه Google.
@@ -30,7 +30,7 @@ Merge, Split, Compress (raster), Rotate, Delete pages, Extract pages, Reorder pa
 المشروع Static بالكامل. في Vercel استخدم Project Name: `docmivo` وFramework Preset: `Other` واترك Build Command فارغًا وOutput Directory = `.`.
 
 ## رابط الإطلاق المستهدف
-https://docmivo.vercel.app
+https://getdocmivo.com
 
 
 ## V2 status
