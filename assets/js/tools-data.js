@@ -2,7 +2,7 @@ window.DOCMIVO_TOOLS = [
  {"slug":"compress-pdf","icon":"🗜️","cat":"optimize","title":"ضغط PDF","desc":"قلّل حجم PDF بإعادة ترميز الصفحات مع مستويات جودة متعددة.","accept":".pdf","multiple":false,"noFile":false},
  {"slug":"merge-pdf","icon":"🔗","cat":"organize","title":"دمج PDF","desc":"ادمج عدة ملفات PDF في ملف واحد بالترتيب الذي تختاره.","accept":".pdf","multiple":true,"noFile":false},
  {"slug":"images-to-pdf","icon":"🧩","cat":"convert","title":"صور إلى PDF","desc":"حوّل صور JPG وPNG وWebP إلى ملف PDF واحد.","accept":"image/jpeg,image/png,image/webp","multiple":true,"noFile":false},
- {"slug":"word-to-pdf","icon":"🟦","cat":"convert","title":"Word إلى PDF","desc":"حوّل ملفات DOCX إلى PDF مع الحفاظ على التنسيق الأساسي داخل المتصفح.","accept":".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document","multiple":false,"noFile":false},
+ {"slug":"word-to-pdf","icon":"🟦","cat":"convert","title":"Word إلى PDF","desc":"حوّل نص وفقرات ملفات DOCX إلى PDF موثوق مباشرة داخل المتصفح.","accept":".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document","multiple":false,"noFile":false},
  {"slug":"split-pdf","icon":"✂️","cat":"organize","title":"تقسيم PDF","desc":"قسّم الملف إلى صفحات منفصلة أو نطاقات مخصصة.","accept":".pdf","multiple":false,"noFile":false},
  {"slug":"pdf-to-jpg","icon":"🖼️","cat":"convert","title":"PDF إلى JPG","desc":"حوّل كل صفحة PDF إلى صورة JPG وحمّلها كملف ZIP.","accept":".pdf","multiple":false,"noFile":false},
  {"slug":"sign-pdf","icon":"✒️","cat":"edit","title":"توقيع PDF","desc":"أضف صورة توقيع PNG أو JPG إلى صفحة محددة داخل PDF.","accept":".pdf,image/png,image/jpeg","multiple":true,"noFile":false},

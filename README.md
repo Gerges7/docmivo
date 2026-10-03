@@ -27,3 +27,8 @@ Some browser conversions are approximate. Always review generated files before p
 - Quick-search positioning now scrolls the search field directly below the sticky navbar and focuses it.
 - File chooser controls use native `<label for="fileInput">` activation plus a direct JS fallback instead of relying on event bubbling.
 - Word → PDF uses a new two-stage renderer: visual DOCX rendering first, then a text/paragraph fallback if the visual canvas is blank, followed by a first-page blank-output check before download.
+
+
+## V9 hotfix
+- Quick Search is now a modal instead of scroll/hash navigation.
+- Word to PDF now parses DOCX XML directly and renders text/paragraphs to PDF canvases; no html2canvas/Mammoth rendering path is used for this tool.

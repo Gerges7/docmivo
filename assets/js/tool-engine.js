@@ -125,45 +125,87 @@ async function rawTextToPdfBlob(text){
  for(const c of pages){const b=await canvasBlob(c,'image/jpeg',.95),img=await out.embedJpg(await b.arrayBuffer()),p=out.addPage([pw,ph]);p.drawImage(img,{x:0,y:0,width:pw,height:ph});}
  return new Blob([await out.save()],{type:'application/pdf'});
 }
-async function docxToPdfGuaranteed(file,name='word-converted.pdf'){
- const cover=conversionCover();let host=null;
- try{
-  const buf=await file.arrayBuffer();
-  status('جاري قراءة ملف Word…');
-  const htmlResult=await mammoth.convertToHtml({arrayBuffer:buf});
-  const textResult=await mammoth.extractRawText({arrayBuffer:buf});
-  const clean=sanitizeHtml(htmlResult.value||''),raw=(textResult.value||'').trim();
-  if(!clean.trim()&&!raw)throw new Error('لم نتمكن من قراءة محتوى ملف Word. تأكد أن الملف DOCX سليم وغير محمي.');
-  host=printableHost(clean||`<div>${escapeText(raw).replace(/\n/g,'<br>')}</div>`);
-  host.querySelectorAll('img').forEach(img=>{img.style.maxWidth='100%';img.style.height='auto'});
-  host.querySelectorAll('table').forEach(t=>t.style.cssText+=';border-collapse:collapse;width:100%;max-width:100%;');
-  host.querySelectorAll('td,th').forEach(td=>td.style.cssText+=';border:1px solid #d1d5db;padding:6px;vertical-align:top;');
-  host.querySelectorAll('p').forEach(el=>el.style.cssText+=';margin:0 0 10px;');
-  host.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el=>el.style.cssText+=';page-break-after:avoid;margin:16px 0 8px;');
-  await waitForHostAssets(host);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-  let blob=null;
-  if(typeof window.html2canvas==='function'){
-   try{
-    status('جاري رسم صفحات Word…');
-    const canvas=await window.html2canvas(host,{scale:1.65,useCORS:true,backgroundColor:'#ffffff',logging:false,scrollX:0,scrollY:0,windowWidth:Math.max(794,host.scrollWidth),windowHeight:Math.max(1123,host.scrollHeight)});
-    if(canvasHasVisibleContent(canvas))blob=await canvasPagesToPdfBlob(canvas);
-   }catch(err){console.warn('DOCX visual render fallback',err)}
-  }
-  if(!blob){
-   if(!raw)throw new Error('تعذر رسم المستند ولم نجد نصًا يمكن استخدامه كمسار احتياطي.');
-   status('استخدام التحويل الآمن للنص والفقرات…');
-   blob=await rawTextToPdfBlob(raw);
-  }
-  if(!(blob instanceof Blob)||blob.size<1400)throw new Error('تعذر إنشاء PDF صالح من ملف Word.');
-  // Final check: page count + raster check of the first page to reject a blank result.
-  try{
-   const pdf=await pdfjsLib.getDocument({data:new Uint8Array(await blob.arrayBuffer())}).promise;if(!pdf.numPages)throw new Error('empty');
-   const first=await renderCanvasFromPage(pdf,1,.45);if(!canvasHasVisibleContent(first))throw new Error('blank');
-  }catch{throw new Error('أوقفنا التنزيل لأن الناتج كان فارغًا. جرّب ملف DOCX آخر أو أرسل لنا الملف لاختبار الحالة.');}
-  download(blob,name);return blob;
- }finally{host?.remove();cover.remove()}
+async function extractDocxParagraphs(file){
+ const zip=await JSZip.loadAsync(await file.arrayBuffer());
+ const entry=zip.file('word/document.xml');
+ if(!entry)throw new Error('ملف DOCX لا يحتوي على مستند Word صالح.');
+ const xml=await entry.async('string'),doc=new DOMParser().parseFromString(xml,'application/xml');
+ if(doc.querySelector('parsererror'))throw new Error('تعذر قراءة بنية ملف DOCX.');
+ const paras=[...doc.getElementsByTagNameNS('*','p')],out=[];
+ for(const p of paras){
+   let text='';
+   for(const n of [...p.getElementsByTagName('*')]){
+     const k=(n.localName||'').toLowerCase();
+     if(k==='t')text+=n.textContent||'';
+     else if(k==='tab')text+='    ';
+     else if(k==='br'||k==='cr')text+='\n';
+   }
+   text=text.replace(/[\u00A0\t]+/g,' ').replace(/ +/g,' ').trim();
+   if(!text)continue;
+   const style=p.getElementsByTagNameNS('*','pStyle')[0];
+   const styleVal=style?.getAttributeNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main','val')||style?.getAttribute('w:val')||style?.getAttribute('val')||'';
+   const isHeading=/^(title|heading[1-6])$/i.test(styleVal);
+   const isList=p.getElementsByTagNameNS('*','numPr').length>0;
+   out.push({text:(isList?'• ':'')+text,heading:isHeading});
+ }
+ return out;
 }
-
+function wrapCanvasText(ctx,text,maxWidth){
+ const words=String(text||'').split(/\s+/).filter(Boolean),lines=[];let line='';
+ for(const word of words){
+   const test=line?line+' '+word:word;
+   if(!line||ctx.measureText(test).width<=maxWidth){line=test;continue;}
+   lines.push(line);line=word;
+ }
+ if(line)lines.push(line);return lines;
+}
+async function docxParagraphsToPdfBlob(paragraphs){
+ if(!paragraphs.length)throw new Error('ملف Word لا يحتوي على نص يمكن تحويله في النسخة الحالية.');
+ const out=await PDFDocument.create();
+ const PXW=1240,PXH=1754,M=105,MAXW=PXW-M*2,BOTTOM=PXH-M;
+ let canvas=null,ctx=null,y=M,pageCount=0,drawnChars=0;
+ function startPage(){
+   canvas=document.createElement('canvas');canvas.width=PXW;canvas.height=PXH;
+   ctx=canvas.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,PXW,PXH);ctx.textBaseline='top';y=M;
+ }
+ async function flushPage(){
+   if(!canvas)return;
+   const dataUrl=canvas.toDataURL('image/png');
+   const img=await out.embedPng(dataUrl),p=out.addPage([595.28,841.89]);
+   p.drawImage(img,{x:0,y:0,width:595.28,height:841.89});pageCount++;
+ }
+ startPage();
+ for(const para of paragraphs){
+   const rtl=/[\u0590-\u08FF]/.test(para.text),fontPx=para.heading?39:30,lineH=para.heading?58:47,gap=para.heading?24:18;
+   ctx.font=`${para.heading?'700':'400'} ${fontPx}px Tahoma, Arial, sans-serif`;
+   ctx.direction=rtl?'rtl':'ltr';ctx.textAlign=rtl?'right':'left';ctx.fillStyle='#111827';
+   const x=rtl?PXW-M:M,lines=wrapCanvasText(ctx,para.text,MAXW);
+   for(const line of lines){
+     if(y+lineH>BOTTOM){await flushPage();startPage();ctx.font=`${para.heading?'700':'400'} ${fontPx}px Tahoma, Arial, sans-serif`;ctx.direction=rtl?'rtl':'ltr';ctx.textAlign=rtl?'right':'left';ctx.fillStyle='#111827';}
+     ctx.fillText(line,x,y,MAXW);drawnChars+=line.replace(/\s/g,'').length;y+=lineH;
+   }
+   y+=gap;
+ }
+ await flushPage();
+ if(!drawnChars||!pageCount)throw new Error('تعذر رسم محتوى ملف Word.');
+ return {blob:new Blob([await out.save()],{type:'application/pdf'}),pageCount,drawnChars};
+}
+async function docxToPdfGuaranteed(file,name='word-converted.pdf'){
+ const cover=conversionCover();
+ try{
+   status('جاري قراءة ملف Word مباشرة…');
+   const paragraphs=await extractDocxParagraphs(file);
+   if(!paragraphs.length)throw new Error('لم نجد نصًا قابلًا للتحويل داخل ملف Word.');
+   status(`تم العثور على ${paragraphs.length} فقرة. جاري إنشاء PDF…`);
+   const result=await docxParagraphsToPdfBlob(paragraphs);
+   if(!(result.blob instanceof Blob)||result.blob.size<1200)throw new Error('تعذر إنشاء PDF صالح من ملف Word.');
+   // Structural validation only. The PDF was created from canvases that already contain the extracted text.
+   const parsed=await pdfjsLib.getDocument({data:new Uint8Array(await result.blob.arrayBuffer())}).promise;
+   if(!parsed.numPages)throw new Error('تم إنشاء PDF بدون صفحات.');
+   status(`تم تحويل ${paragraphs.length} فقرة إلى ${parsed.numPages} صفحة. جاري التنزيل…`,'ok');
+   download(result.blob,name);return result.blob;
+ }finally{cover.remove()}
+}
 
 function escapeText(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
 async function textImage(doc,text,fontSize=12,color='#222',bold=false){
