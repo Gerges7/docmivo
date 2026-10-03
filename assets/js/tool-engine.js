@@ -18,7 +18,15 @@ if(list)list.addEventListener('click',e=>{let i;if(e.target.dataset.remove!==und
 async function maybePrefill(f){try{if(slug==='text-to-pdf'&&/\.txt$/i.test(f.name))$('#textContent').value=await f.text();if(slug==='html-to-pdf'&&/\.html?$/i.test(f.name))$('#htmlContent').value=await f.text();if(slug==='markdown-to-pdf'&&/\.(md|markdown|txt)$/i.test(f.name))$('#markdownContent').value=await f.text()}catch{}}
 function addFiles(fs){const incoming=[...fs];if(!tool.multiple)files=incoming.slice(0,1);else files=[...files,...incoming];incoming.forEach(maybePrefill);renderFiles();clearStatus()}
 if(input)input.addEventListener('change',e=>addFiles(e.target.files));
-if(drop){['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag')}));['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag')}));drop.addEventListener('drop',e=>addFiles(e.dataTransfer.files));drop.addEventListener('click',e=>{if(!e.target.closest('button'))input?.click()});}
+function openFilePicker(){if(!input)return;input.value='';input.click()}
+if(drop){
+ ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag')}));
+ ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag')}));
+ drop.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
+ // The whole dropzone AND the visible button open the browser picker.
+ drop.addEventListener('click',e=>{e.preventDefault();openFilePicker()});
+ drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openFilePicker()}});
+}
 if(tool?.noFile)setTimeout(renderFiles,0);
 
 function parsePages(expr,total){const out=[];String(expr||'').split(',').forEach(part=>{part=part.trim();if(!part)return;if(part.includes('-')){let[a,b]=part.split('-').map(Number);if(!b)b=total;for(let i=Math.max(1,a);i<=Math.min(total,b);i++)out.push(i-1)}else{const n=Number(part);if(n>=1&&n<=total)out.push(n-1)}});return [...new Set(out)]}
@@ -27,8 +35,52 @@ async function renderCanvasFromPage(pdf,pageNum,scale=1.6){const page=await pdf.
 function canvasBlob(canvas,type='image/jpeg',quality=.9){return new Promise((res,rej)=>canvas.toBlob(b=>b?res(b):rej(new Error('تعذر إنشاء الصورة.')),type,quality))}
 function posXY(pageW,pageH,objW,objH,pos,pad=28){switch(pos){case'top-left':return[pad,pageH-objH-pad];case'top-center':return[(pageW-objW)/2,pageH-objH-pad];case'top-right':return[pageW-objW-pad,pageH-objH-pad];case'bottom-left':return[pad,pad];case'bottom-center':return[(pageW-objW)/2,pad];case'bottom-right':return[pageW-objW-pad,pad];default:return[(pageW-objW)/2,(pageH-objH)/2]}}
 function sanitizeHtml(raw){const doc=new DOMParser().parseFromString(raw,'text/html');doc.querySelectorAll('script,iframe,object,embed,base,meta[http-equiv]').forEach(n=>n.remove());doc.querySelectorAll('*').forEach(el=>{[...el.attributes].forEach(a=>{if(/^on/i.test(a.name)||((a.name==='href'||a.name==='src')&&/^javascript:/i.test(a.value)))el.removeAttribute(a.name)})});return doc.body.innerHTML}
-function printableHost(inner){const host=document.createElement('div');host.dir='auto';host.style.cssText='position:fixed;left:-99999px;top:0;width:794px;min-height:1123px;padding:52px;background:#fff;color:#111;font-family:Arial,Tahoma,sans-serif;line-height:1.6;overflow-wrap:anywhere;';host.innerHTML=inner;document.body.appendChild(host);return host}
-async function htmlHostToPdf(host,name){await html2pdf().set({margin:[10,10,10,10],filename:name,image:{type:'jpeg',quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy','avoid-all']}}).from(host).save();host.remove()}
+function printableHost(inner){
+ const host=document.createElement('div');
+ host.dir='auto';
+ // Keep the source inside the viewport while html2canvas renders it. V6 placed it at -99999px,
+ // which could produce a completely blank canvas/PDF in some browsers.
+ host.style.cssText='position:fixed;left:0;top:0;width:794px;min-height:1123px;padding:52px;box-sizing:border-box;background:#fff;color:#111;font-family:Arial,Tahoma,sans-serif;line-height:1.6;overflow-wrap:anywhere;z-index:2147483000;pointer-events:none;';
+ host.innerHTML=inner;
+ document.body.appendChild(host);
+ return host;
+}
+function conversionCover(){
+ const cover=document.createElement('div');
+ cover.setAttribute('aria-live','polite');
+ cover.style.cssText='position:fixed;inset:0;z-index:2147483001;background:rgba(248,250,252,.98);display:grid;place-items:center;text-align:center;color:#0f172a;font:700 16px Arial,Tahoma,sans-serif;';
+ cover.innerHTML='<div><div style="font-size:34px;margin-bottom:12px">📄</div><div>جاري تجهيز ملف PDF…</div><div style="font-size:12px;font-weight:400;color:#64748b;margin-top:8px">لا تغلق الصفحة أثناء التحويل</div></div>';
+ document.body.appendChild(cover);return cover;
+}
+async function waitForHostAssets(host){
+ try{if(document.fonts?.ready)await document.fonts.ready}catch{}
+ const imgs=[...host.querySelectorAll('img')];
+ await Promise.all(imgs.map(img=>{
+   if(img.complete)return Promise.resolve();
+   return new Promise(resolve=>{const done=()=>resolve();img.addEventListener('load',done,{once:true});img.addEventListener('error',done,{once:true});setTimeout(done,3500)});
+ }));
+}
+async function htmlHostToPdf(host,name){
+ const cover=conversionCover();
+ try{
+  if(!host.innerText.trim()&&!host.querySelector('img,table,svg,canvas'))throw new Error('لم يتم العثور على محتوى قابل للتحويل داخل الملف.');
+  await waitForHostAssets(host);
+  // Avoid avoid-all here: it can create blank leading pages for complex Word/HTML layouts.
+  const worker=html2pdf().set({
+   margin:[10,10,10,10],filename:name,
+   image:{type:'jpeg',quality:.96},
+   html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0,windowWidth:Math.max(794,host.scrollWidth),windowHeight:Math.max(1123,host.scrollHeight)},
+   jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+   pagebreak:{mode:['css','legacy']}
+  }).from(host).toPdf();
+  const blob=await worker.outputPdf('blob');
+  if(!(blob instanceof Blob)||blob.size<1200)throw new Error('تعذر إنشاء PDF صالح. جرّب الملف مرة أخرى أو استخدم مستند DOCX أبسط.');
+  // Sanity-check that a readable PDF with at least one page was produced before downloading.
+  try{const pdf=await pdfjsLib.getDocument({data:new Uint8Array(await blob.arrayBuffer())}).promise;if(!pdf.numPages)throw new Error('empty')}catch{throw new Error('تم إنشاء ملف غير صالح. لم يتم تنزيله لحمايتك من نتيجة فارغة.');}
+  download(blob,name);
+  return blob;
+ }finally{host.remove();cover.remove()}
+}
 
 
 function escapeText(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
@@ -99,7 +151,19 @@ async function processTool(){
   } else if(slug==='pdf-to-powerpoint'){
    const data=new Uint8Array(await files[0].arrayBuffer()),pdf=await pdfjsLib.getDocument({data}).promise,scale=Number($('#scale').value||1.35),pptx=new PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='DocMivo';pptx.subject='PDF converted to PowerPoint';for(let i=1;i<=pdf.numPages;i++){status(`إنشاء الشريحة ${i} من ${pdf.numPages}…`);const canvas=await renderCanvasFromPage(pdf,i,scale),dataUrl=canvas.toDataURL('image/jpeg',.9),slide=pptx.addSlide();slide.background={color:'FFFFFF'};slide.addImage({data:dataUrl,x:0,y:0,w:13.333,h:7.5,sizing:'contain'})}await pptx.writeFile({fileName:'pdf-to-powerpoint.pptx'});
   } else if(slug==='word-to-pdf'){
-   const f=files[0];if(!/\.docx$/i.test(f.name))throw new Error('اختر ملف DOCX.');status('جاري قراءة ملف Word…');const r=await mammoth.convertToHtml({arrayBuffer:await f.arrayBuffer()}),host=printableHost(sanitizeHtml(r.value));host.querySelectorAll('img').forEach(img=>img.style.maxWidth='100%');await htmlHostToPdf(host,'word-converted.pdf');
+   const f=files[0];if(!/\.docx$/i.test(f.name))throw new Error('اختر ملف DOCX.');
+   status('جاري قراءة ملف Word…');
+   const r=await mammoth.convertToHtml({arrayBuffer:await f.arrayBuffer()});
+   const clean=sanitizeHtml(r.value||'');
+   if(!clean.trim())throw new Error('لم نتمكن من قراءة محتوى ملف Word. تأكد أن الملف DOCX سليم وغير محمي.');
+   const host=printableHost(clean);
+   host.querySelectorAll('img').forEach(img=>{img.style.maxWidth='100%';img.style.height='auto'});
+   host.querySelectorAll('table').forEach(t=>t.style.cssText+=';border-collapse:collapse;width:100%;max-width:100%;');
+   host.querySelectorAll('td,th').forEach(td=>td.style.cssText+=';border:1px solid #d1d5db;padding:6px;vertical-align:top;');
+   host.querySelectorAll('p').forEach(el=>el.style.cssText+=';margin:0 0 10px;');
+   host.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el=>el.style.cssText+=';page-break-after:avoid;margin:16px 0 8px;');
+   status('جاري إنشاء صفحات PDF…');
+   await htmlHostToPdf(host,'word-converted.pdf');
   } else if(slug==='excel-to-pdf'){
    const wb=XLSX.read(await files[0].arrayBuffer(),{type:'array'}),parts=[];for(const name of wb.SheetNames){parts.push(`<section style="page-break-after:always"><h2>${String(name).replace(/[&<>]/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}</h2>${XLSX.utils.sheet_to_html(wb.Sheets[name])}</section>`)}const host=printableHost(parts.join(''));host.querySelectorAll('table').forEach(t=>t.style.cssText='border-collapse:collapse;width:100%;font-size:11px');host.querySelectorAll('td,th').forEach(td=>td.style.cssText='border:1px solid #bbb;padding:4px;');await htmlHostToPdf(host,'excel-converted.pdf');
   } else if(slug==='html-to-pdf'){

@@ -15,3 +15,10 @@ Production static site for https://getdocmivo.com.
 
 ## Important product constraints
 Some browser conversions are approximate. Always review generated files before professional, legal, financial, archival or print use.
+
+
+## V7 UX + conversion fixes
+- Fixed the visible Choose Files button on every upload tool.
+- Reworked browser HTML/DOCX -> PDF rendering to avoid blank PDFs and validate the generated PDF before download.
+- Replaced weak Start now / Try Merge CTAs with Search and Compress actions.
+- Reordered homepage tools by common prominence across major PDF suites; future GA4 usage data should refine the order.

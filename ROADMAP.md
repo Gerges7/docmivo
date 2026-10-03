@@ -70,3 +70,10 @@
 - Repair PDF
 - True destructive redaction
 - Batch processing
+
+
+## V7 shipped
+- File-picker UX fixed across upload tools
+- Word-to-PDF blank-output rendering path fixed and validated before download
+- Homepage tool popularity ordering + common-tool badges
+- Navbar/hero CTA cleanup

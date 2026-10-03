@@ -10,6 +10,8 @@
  let cat='all';
  function filter(){ const q=(search?.value||'').toLowerCase().trim(); cards.forEach(card=>{ const okCat=cat==='all'||card.dataset.cat===cat; const okQ=!q||card.textContent.toLowerCase().includes(q); card.style.display=okCat&&okQ?'flex':'none'; }); }
  if(search) search.addEventListener('input',filter);
+ function focusToolSearch(){if(search&&location.hash==='#toolSearch'){setTimeout(()=>{search.scrollIntoView({behavior:'smooth',block:'center'});search.focus({preventScroll:true})},80)}}
+ focusToolSearch();window.addEventListener('hashchange',focusToolSearch);
  chips.forEach(ch=>ch.addEventListener('click',()=>{chips.forEach(x=>x.classList.remove('active'));ch.classList.add('active');cat=ch.dataset.cat;filter();}));
  // Google CMP consent-revocation link: reveal only when the consent API is ready and GDPR applies.
  const privacyLink=document.getElementById('privacy-settings-link');
