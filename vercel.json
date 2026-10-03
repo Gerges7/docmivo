@@ -73,6 +73,9 @@
   "functions": {
     "api/ai.py": {
       "maxDuration": 60
+    },
+    "api/converter_token.py": {
+      "maxDuration": 10
     }
   }
 }
