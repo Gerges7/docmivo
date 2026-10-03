@@ -77,3 +77,23 @@
 - Word-to-PDF blank-output rendering path fixed and validated before download
 - Homepage tool popularity ordering + common-tool badges
 - Navbar/hero CTA cleanup
+
+
+## V11 — DocMivo AI Beta (implemented)
+- Ask PDF
+- Summarize PDF
+- Translate PDF content
+- Extract tables to JSON / CSV
+- AI OCR cleanup
+- Python Vercel backend with `GEMINI_API_KEY` kept server-side
+- Explicit AI privacy consent and beta noindex
+
+## Next AI iterations
+- Searchable OCR PDF with text layer
+- AI redaction suggestions
+- Research paper assistant
+- Invoice / receipt extractor
+- CV analyzer
+- Contract key-clause extractor
+- Per-user / per-IP durable rate limiting
+- Large-file upload path without the 4.5 MB Function body bottleneck

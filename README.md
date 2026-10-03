@@ -39,3 +39,19 @@ Some browser conversions are approximate. Always review generated files before p
 - Versioned all first-party JavaScript assets (`*.v10.js`) to bypass stale browser caches.
 - Disabled year-long immutable caching for `/assets/*` during active development.
 - Word to PDF uses direct DOCX XML parsing and canvas/PDF-Lib rendering; there is no Mammoth dependency in the Word converter.
+
+
+## V11 — DocMivo AI Beta
+
+Adds 5 AI tools backed by a Python Vercel Function and Google Gemini:
+- Ask PDF
+- Summarize PDF
+- Translate PDF
+- Extract Tables
+- AI OCR Cleanup
+
+### Required Vercel environment variable
+Set `GEMINI_API_KEY` in Vercel Project Settings → Environment Variables before using the AI tools.
+Optional: set `GEMINI_MODEL` (defaults to `gemini-3.8-flash`).
+
+AI pages are `noindex` during beta until they are tested in production. Direct file upload is capped around 3.5 MB to stay under Vercel's 4.5 MB Function request-body limit. Larger text PDFs can fall back to local text extraction in the browser.
