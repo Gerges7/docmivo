@@ -32,3 +32,10 @@ Some browser conversions are approximate. Always review generated files before p
 ## V9 hotfix
 - Quick Search is now a modal instead of scroll/hash navigation.
 - Word to PDF now parses DOCX XML directly and renders text/paragraphs to PDF canvases; no html2canvas/Mammoth rendering path is used for this tool.
+
+
+## V10 hotfix
+- Removed the quick-search navbar button entirely.
+- Versioned all first-party JavaScript assets (`*.v10.js`) to bypass stale browser caches.
+- Disabled year-long immutable caching for `/assets/*` during active development.
+- Word to PDF uses direct DOCX XML parsing and canvas/PDF-Lib rendering; there is no Mammoth dependency in the Word converter.
