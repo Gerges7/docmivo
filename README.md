@@ -22,3 +22,8 @@ Some browser conversions are approximate. Always review generated files before p
 - Reworked browser HTML/DOCX -> PDF rendering to avoid blank PDFs and validate the generated PDF before download.
 - Replaced weak Start now / Try Merge CTAs with Search and Compress actions.
 - Reordered homepage tools by common prominence across major PDF suites; future GA4 usage data should refine the order.
+
+## V8 hotfix
+- Quick-search positioning now scrolls the search field directly below the sticky navbar and focuses it.
+- File chooser controls use native `<label for="fileInput">` activation plus a direct JS fallback instead of relying on event bubbling.
+- Word → PDF uses a new two-stage renderer: visual DOCX rendering first, then a text/paragraph fallback if the visual canvas is blank, followed by a first-page blank-output check before download.

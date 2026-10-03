@@ -23,8 +23,11 @@ if(drop){
  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag')}));
  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag')}));
  drop.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
- // The whole dropzone AND the visible button open the browser picker.
- drop.addEventListener('click',e=>{e.preventDefault();openFilePicker()});
+ // Bind the visible button directly. This avoids relying on click bubbling from the button to the dropzone.
+ const pickerBtn=drop.querySelector('button,.file-picker-label,[data-file-picker]');
+ if(pickerBtn)pickerBtn.addEventListener('click',e=>{e.stopPropagation();if(pickerBtn.tagName==='LABEL')return;e.preventDefault();openFilePicker()},{capture:true});
+ // Clicking the empty area of the dropzone still opens the picker.
+ drop.addEventListener('click',e=>{if(e.target.closest('button,.file-picker-label,[data-file-picker]'))return;e.preventDefault();openFilePicker()});
  drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openFilePicker()}});
 }
 if(tool?.noFile)setTimeout(renderFiles,0);
@@ -80,6 +83,85 @@ async function htmlHostToPdf(host,name){
   download(blob,name);
   return blob;
  }finally{host.remove();cover.remove()}
+}
+
+
+function canvasHasVisibleContent(canvas){
+ try{
+  if(!canvas||!canvas.width||!canvas.height)return false;
+  const thumb=document.createElement('canvas'),tw=180,th=Math.max(80,Math.min(420,Math.round(canvas.height*(tw/canvas.width))));
+  thumb.width=tw;thumb.height=th;const ctx=thumb.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#fff';ctx.fillRect(0,0,tw,th);ctx.drawImage(canvas,0,0,tw,th);
+  const d=ctx.getImageData(0,0,tw,th).data;let ink=0,total=0;
+  for(let i=0;i<d.length;i+=16){total++;if(d[i]<242||d[i+1]<242||d[i+2]<242)ink++;}
+  return total>0&&ink/total>.0015;
+ }catch{return true}
+}
+async function canvasPagesToPdfBlob(canvas){
+ const out=await PDFDocument.create(),pageW=595.28,pageH=841.89,margin=24,useW=pageW-margin*2,useH=pageH-margin*2;
+ const slicePx=Math.max(1,Math.floor(canvas.width*(useH/useW)));
+ for(let y=0;y<canvas.height;y+=slicePx){
+  const h=Math.min(slicePx,canvas.height-y),slice=document.createElement('canvas');slice.width=canvas.width;slice.height=h;
+  const ctx=slice.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,slice.width,slice.height);ctx.drawImage(canvas,0,y,canvas.width,h,0,0,canvas.width,h);
+  const b=await canvasBlob(slice,'image/jpeg',.94),img=await out.embedJpg(await b.arrayBuffer()),drawH=useW*(h/canvas.width),p=out.addPage([pageW,pageH]);
+  p.drawImage(img,{x:margin,y:pageH-margin-drawH,width:useW,height:drawH});
+ }
+ return new Blob([await out.save()],{type:'application/pdf'});
+}
+function wrapCanvasLine(ctx,text,maxWidth){
+ const words=String(text||'').trim().split(/\s+/).filter(Boolean),lines=[];let line='';
+ for(const w of words){const test=line?line+' '+w:w;if(ctx.measureText(test).width<=maxWidth||!line)line=test;else{lines.push(line);line=w;}}
+ if(line)lines.push(line);return lines.length?lines:[''];
+}
+async function rawTextToPdfBlob(text){
+ const pagePxW=1240,pagePxH=1754,margin=100,maxW=pagePxW-margin*2,fontPx=30,lineH=46,paragraphGap=20,pages=[];
+ let canvas,ctx,y;
+ function newPage(){canvas=document.createElement('canvas');canvas.width=pagePxW;canvas.height=pagePxH;ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,pagePxW,pagePxH);ctx.fillStyle='#111827';ctx.font=`${fontPx}px Arial, Tahoma, sans-serif`;ctx.textBaseline='top';y=margin;pages.push(canvas);}
+ newPage();
+ const paras=String(text||'').replace(/\r/g,'').split('\n');
+ for(const paraRaw of paras){const para=paraRaw.trim();if(!para){y+=lineH*.55;continue}const rtl=/[\u0590-\u08FF]/.test(para);ctx.direction=rtl?'rtl':'ltr';ctx.textAlign=rtl?'right':'left';const x=rtl?pagePxW-margin:margin;const lines=wrapCanvasLine(ctx,para,maxW);
+  for(const line of lines){if(y+lineH>pagePxH-margin){newPage();ctx.direction=rtl?'rtl':'ltr';ctx.textAlign=rtl?'right':'left';}ctx.fillText(line,x,y,maxW);y+=lineH;}y+=paragraphGap;
+ }
+ const out=await PDFDocument.create(),pw=595.28,ph=841.89;
+ for(const c of pages){const b=await canvasBlob(c,'image/jpeg',.95),img=await out.embedJpg(await b.arrayBuffer()),p=out.addPage([pw,ph]);p.drawImage(img,{x:0,y:0,width:pw,height:ph});}
+ return new Blob([await out.save()],{type:'application/pdf'});
+}
+async function docxToPdfGuaranteed(file,name='word-converted.pdf'){
+ const cover=conversionCover();let host=null;
+ try{
+  const buf=await file.arrayBuffer();
+  status('جاري قراءة ملف Word…');
+  const htmlResult=await mammoth.convertToHtml({arrayBuffer:buf});
+  const textResult=await mammoth.extractRawText({arrayBuffer:buf});
+  const clean=sanitizeHtml(htmlResult.value||''),raw=(textResult.value||'').trim();
+  if(!clean.trim()&&!raw)throw new Error('لم نتمكن من قراءة محتوى ملف Word. تأكد أن الملف DOCX سليم وغير محمي.');
+  host=printableHost(clean||`<div>${escapeText(raw).replace(/\n/g,'<br>')}</div>`);
+  host.querySelectorAll('img').forEach(img=>{img.style.maxWidth='100%';img.style.height='auto'});
+  host.querySelectorAll('table').forEach(t=>t.style.cssText+=';border-collapse:collapse;width:100%;max-width:100%;');
+  host.querySelectorAll('td,th').forEach(td=>td.style.cssText+=';border:1px solid #d1d5db;padding:6px;vertical-align:top;');
+  host.querySelectorAll('p').forEach(el=>el.style.cssText+=';margin:0 0 10px;');
+  host.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el=>el.style.cssText+=';page-break-after:avoid;margin:16px 0 8px;');
+  await waitForHostAssets(host);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+  let blob=null;
+  if(typeof window.html2canvas==='function'){
+   try{
+    status('جاري رسم صفحات Word…');
+    const canvas=await window.html2canvas(host,{scale:1.65,useCORS:true,backgroundColor:'#ffffff',logging:false,scrollX:0,scrollY:0,windowWidth:Math.max(794,host.scrollWidth),windowHeight:Math.max(1123,host.scrollHeight)});
+    if(canvasHasVisibleContent(canvas))blob=await canvasPagesToPdfBlob(canvas);
+   }catch(err){console.warn('DOCX visual render fallback',err)}
+  }
+  if(!blob){
+   if(!raw)throw new Error('تعذر رسم المستند ولم نجد نصًا يمكن استخدامه كمسار احتياطي.');
+   status('استخدام التحويل الآمن للنص والفقرات…');
+   blob=await rawTextToPdfBlob(raw);
+  }
+  if(!(blob instanceof Blob)||blob.size<1400)throw new Error('تعذر إنشاء PDF صالح من ملف Word.');
+  // Final check: page count + raster check of the first page to reject a blank result.
+  try{
+   const pdf=await pdfjsLib.getDocument({data:new Uint8Array(await blob.arrayBuffer())}).promise;if(!pdf.numPages)throw new Error('empty');
+   const first=await renderCanvasFromPage(pdf,1,.45);if(!canvasHasVisibleContent(first))throw new Error('blank');
+  }catch{throw new Error('أوقفنا التنزيل لأن الناتج كان فارغًا. جرّب ملف DOCX آخر أو أرسل لنا الملف لاختبار الحالة.');}
+  download(blob,name);return blob;
+ }finally{host?.remove();cover.remove()}
 }
 
 
@@ -152,18 +234,7 @@ async function processTool(){
    const data=new Uint8Array(await files[0].arrayBuffer()),pdf=await pdfjsLib.getDocument({data}).promise,scale=Number($('#scale').value||1.35),pptx=new PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='DocMivo';pptx.subject='PDF converted to PowerPoint';for(let i=1;i<=pdf.numPages;i++){status(`إنشاء الشريحة ${i} من ${pdf.numPages}…`);const canvas=await renderCanvasFromPage(pdf,i,scale),dataUrl=canvas.toDataURL('image/jpeg',.9),slide=pptx.addSlide();slide.background={color:'FFFFFF'};slide.addImage({data:dataUrl,x:0,y:0,w:13.333,h:7.5,sizing:'contain'})}await pptx.writeFile({fileName:'pdf-to-powerpoint.pptx'});
   } else if(slug==='word-to-pdf'){
    const f=files[0];if(!/\.docx$/i.test(f.name))throw new Error('اختر ملف DOCX.');
-   status('جاري قراءة ملف Word…');
-   const r=await mammoth.convertToHtml({arrayBuffer:await f.arrayBuffer()});
-   const clean=sanitizeHtml(r.value||'');
-   if(!clean.trim())throw new Error('لم نتمكن من قراءة محتوى ملف Word. تأكد أن الملف DOCX سليم وغير محمي.');
-   const host=printableHost(clean);
-   host.querySelectorAll('img').forEach(img=>{img.style.maxWidth='100%';img.style.height='auto'});
-   host.querySelectorAll('table').forEach(t=>t.style.cssText+=';border-collapse:collapse;width:100%;max-width:100%;');
-   host.querySelectorAll('td,th').forEach(td=>td.style.cssText+=';border:1px solid #d1d5db;padding:6px;vertical-align:top;');
-   host.querySelectorAll('p').forEach(el=>el.style.cssText+=';margin:0 0 10px;');
-   host.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el=>el.style.cssText+=';page-break-after:avoid;margin:16px 0 8px;');
-   status('جاري إنشاء صفحات PDF…');
-   await htmlHostToPdf(host,'word-converted.pdf');
+   await docxToPdfGuaranteed(f,'word-converted.pdf');
   } else if(slug==='excel-to-pdf'){
    const wb=XLSX.read(await files[0].arrayBuffer(),{type:'array'}),parts=[];for(const name of wb.SheetNames){parts.push(`<section style="page-break-after:always"><h2>${String(name).replace(/[&<>]/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}</h2>${XLSX.utils.sheet_to_html(wb.Sheets[name])}</section>`)}const host=printableHost(parts.join(''));host.querySelectorAll('table').forEach(t=>t.style.cssText='border-collapse:collapse;width:100%;font-size:11px');host.querySelectorAll('td,th').forEach(td=>td.style.cssText='border:1px solid #bbb;padding:4px;');await htmlHostToPdf(host,'excel-converted.pdf');
   } else if(slug==='html-to-pdf'){
