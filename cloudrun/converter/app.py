@@ -15,6 +15,15 @@ from pathlib import Path
 from flask import Flask, Response, jsonify, make_response, request
 from werkzeug.utils import secure_filename
 
+try:
+    import pikepdf
+except Exception:
+    pikepdf = None
+try:
+    import fitz  # PyMuPDF
+except Exception:
+    fitz = None
+
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_UPLOAD_BYTES', str(25 * 1024 * 1024)))
 
@@ -127,14 +136,32 @@ def _protect(src: Path, out: Path, user_password: str, owner_password: str):
     if not user_password:
         raise ValueError('password_required')
     owner_password = owner_password or secrets.token_urlsafe(18)
+    if pikepdf is not None:
+        with pikepdf.open(src) as pdf:
+            enc = pikepdf.Encryption(owner=owner_password, user=user_password, R=6, aes=True, metadata=True)
+            pdf.save(out, encryption=enc, linearize=True)
+        return
     _run(['qpdf', '--encrypt', user_password, owner_password, '256', '--', str(src), str(out)])
 
 
 def _unlock(src: Path, out: Path, password: str):
+    if pikepdf is not None:
+        with pikepdf.open(src, password=password or '') as pdf:
+            pdf.save(out, linearize=True)
+        return
     _run(['qpdf', f'--password={password}', '--decrypt', str(src), str(out)])
 
 
 def _repair(src: Path, out: Path):
+    # pikepdf repairs many broken cross-reference tables automatically while opening.
+    if pikepdf is not None:
+        try:
+            with pikepdf.open(src, attempt_recovery=True) as pdf:
+                pdf.save(out, compress_streams=True, object_stream_mode=pikepdf.ObjectStreamMode.generate, linearize=True)
+            if out.exists() and out.stat().st_size > 500:
+                return
+        except Exception:
+            pass
     try:
         _run(['qpdf', '--object-streams=generate', '--stream-data=compress', str(src), str(out)], timeout=70)
     except Exception:
@@ -156,9 +183,29 @@ def _pdfa(src: Path, out: Path):
 def _extract_images(src: Path, out_zip: Path):
     folder = out_zip.parent / 'images'
     folder.mkdir(exist_ok=True)
-    prefix = folder / 'image'
-    _run(['pdfimages', '-all', str(src), str(prefix)], timeout=70)
-    files = [p for p in folder.iterdir() if p.is_file()]
+    files = []
+    if fitz is not None:
+        seen = set()
+        doc = fitz.open(src)
+        try:
+            for page_index in range(doc.page_count):
+                page = doc.load_page(page_index)
+                for img_index, info in enumerate(page.get_images(full=True), start=1):
+                    xref = info[0]
+                    if xref in seen:
+                        continue
+                    seen.add(xref)
+                    data = doc.extract_image(xref)
+                    ext = data.get('ext') or 'bin'
+                    path = folder / f'page-{page_index+1}-image-{img_index}.{ext}'
+                    path.write_bytes(data['image'])
+                    files.append(path)
+        finally:
+            doc.close()
+    if not files:
+        prefix = folder / 'image'
+        _run(['pdfimages', '-all', str(src), str(prefix)], timeout=70)
+        files = [p for p in folder.iterdir() if p.is_file()]
     if not files:
         raise RuntimeError('No embedded images found')
     with zipfile.ZipFile(out_zip, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
