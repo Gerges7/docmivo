@@ -1,23 +1,22 @@
-# DocMivo V13
+# DocMivo V14 — Simplified Pro
 
-V13 combines three processing layers in one product:
+V14 focuses on one clear experience per task:
 
-1. **Local browser tools** — 43 PDF utilities.
-2. **DocMivo Conversion Engine** — Python/Cloud Run container using LibreOffice, qpdf, Ghostscript, OCRmyPDF, Tesseract and Poppler.
-3. **DocMivo AI** — 11 Gemini-powered document tools through the Vercel Python API.
+- One visible tool per job — no Standard vs High Quality choices.
+- The site chooses the best available processing path automatically.
+- Technical implementation details are removed from the normal user interface.
+- Advanced tools appear on the homepage only when the processing service is configured.
+- AI tools use short, user-facing privacy language while provider details remain in the privacy policy.
+- The processing service now uses Python libraries where they improve reliability:
+  - `pikepdf` for encryption/decryption/repair when available.
+  - `PyMuPDF` for embedded image extraction.
+  - LibreOffice for Office → PDF fidelity.
+  - OCRmyPDF + Tesseract for searchable OCR.
 
-## Vercel environment variables
+## Deployment
 
-Required for AI:
-- `GEMINI_API_KEY`
-- optional `GEMINI_MODEL=gemini-3.5-flash-lite`
+Upload the whole project to the existing GitHub repository and let Vercel redeploy.
 
-Required for the High Quality conversion engine after Cloud Run deployment:
-- `CONVERTER_API_URL`
-- `CONVERTER_SHARED_SECRET`
+The main website works without the external processing service. Word/Excel keep a browser fallback and automatically use the stronger service once it is configured. Advanced server-only tools stay hidden from the homepage until that service is available.
 
-See `cloudrun/converter/README.md`.
-
-## Privacy model
-
-Local tools keep document processing in the browser where stated. High Quality/server tools upload temporarily to the DocMivo conversion service. AI tools send content to Google Gemini only after explicit user consent.
+See `DEPLOY_PROCESSING_SERVICE.md` when you are ready to enable the advanced processing service.

@@ -1,20 +1,8 @@
-# DocMivo Roadmap after V13
+# DocMivo roadmap
 
-## Shipped in V13
-- 43 browser PDF tools
-- High Quality Word/Excel/PowerPoint → PDF architecture
-- Protect / Unlock / Repair PDF
-- Searchable OCR PDF (Arabic + English)
-- PDF/A conversion
-- Embedded image extraction
-- 11 Gemini AI tools: Ask, Summarize, Translate, Tables, OCR Cleanup, Research Paper, Invoice, CV, Contract, PII Review, Smart Filename
-- signed short-lived upload tokens for the conversion backend
-- clear local/server/AI privacy separation
-
-## Next after live validation
-- coordinate-based destructive redaction
-- batch processing queue
-- English locale + hreflang
-- PWA/offline shell
-- usage-based tool ordering from GA4
-- automated Cloud Run health monitoring
+## Current priorities
+- Improve Office → PDF fidelity through the processing service.
+- Validate AI tools with real documents before indexing them.
+- Add stronger PDF redaction and document extraction features.
+- Improve English-language support and hreflang when content is ready.
+- Use real GA4 usage data to refine tool ordering.
