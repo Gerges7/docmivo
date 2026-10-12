@@ -23,6 +23,8 @@ RUN printf '%s\n' \
 '<?xml version="1.0"?>' \
 '<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">' \
 '<fontconfig>' \
+'  <alias><family>Aptos</family><prefer><family>Carlito</family><family>Arimo</family><family>DejaVu Sans</family></prefer></alias>' \
+'  <alias><family>Aptos Display</family><prefer><family>Carlito</family><family>Arimo</family><family>DejaVu Sans</family></prefer></alias>' \
 '  <alias><family>Arial</family><prefer><family>Arimo</family><family>DejaVu Sans</family></prefer></alias>' \
 '  <alias><family>Arial Narrow</family><prefer><family>Arimo</family><family>DejaVu Sans Condensed</family></prefer></alias>' \
 '  <alias><family>Calibri</family><prefer><family>Carlito</family><family>Arimo</family><family>DejaVu Sans</family></prefer></alias>' \
@@ -42,4 +44,4 @@ RUN mkdir -p /tmp/home /tmp/docmivo && chmod 1777 /tmp /tmp/home /tmp/docmivo
 USER 65532:65532
 
 ENV PORT=8080
-CMD exec gunicorn --bind :${PORT} --workers 1 --threads 4 --timeout 125 app:app
+CMD ["sh", "-c", "exec gunicorn --bind :${PORT} --workers 1 --threads 4 --timeout 125 app:app"]

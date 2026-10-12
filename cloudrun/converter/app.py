@@ -1,10 +1,12 @@
 import base64
 import hashlib
 import hmac
+import html
 import io
 import json
 import mimetypes
 import os
+import re
 import secrets
 import shutil
 import subprocess
@@ -104,7 +106,7 @@ def health():
     if request.method == 'OPTIONS':
         return ('', 204)
     bins = {name: bool(shutil.which(name)) for name in ['libreoffice', 'qpdf', 'gs', 'ocrmypdf', 'pdfimages']}
-    return jsonify({'ok': True, 'service': 'docmivo-converter', 'binaries': bins, 'maxUploadBytes': MAX_UPLOAD_BYTES})
+    return jsonify({'ok': True, 'service': 'docmivo-converter', 'fontFidelity': 'v15.1-docx-theme-override', 'binaries': bins, 'maxUploadBytes': MAX_UPLOAD_BYTES})
 
 
 def _run(cmd, timeout=TIMEOUT_SECONDS, env=None):
@@ -115,21 +117,246 @@ def _run(cmd, timeout=TIMEOUT_SECONDS, env=None):
     return proc
 
 
-def _office_to_pdf(src: Path, outdir: Path) -> Path:
-    profile = outdir / ('lo-profile-' + secrets.token_hex(6))
+# Word theme fonts often name Microsoft-only families (Aptos, Arial, Calibri, ...).
+# LibreOffice can substitute them differently from one Linux build to another.
+# For DOCX only, V15.1 resolves the western/theme references to metric-compatible
+# fonts that are installed in the container. Complex-script/Arabic font selection
+# is deliberately left untouched so we do not disturb RTL shaping that is already
+# close to the source document. The uploaded file itself is never modified.
+_DOCX_LATIN_FONT_MAP = {
+    'Arial': 'Arimo',
+    'Arial Narrow': 'Arimo',
+    'Aptos': 'Carlito',
+    'Aptos Display': 'Carlito',
+    'Calibri': 'Carlito',
+    'Cambria': 'Caladea',
+    'Times New Roman': 'Tinos',
+    'Courier New': 'Cousine',
+    'Segoe UI': 'Carlito',
+}
+_DOCX_THEME_WESTERN_MAP = {
+    'minorBidi': 'Arimo',
+    'majorBidi': 'Tinos',
+    'minorHAnsi': 'Carlito',
+    'majorHAnsi': 'Carlito',
+    'minorAscii': 'Carlito',
+    'majorAscii': 'Carlito',
+}
+_R_FONTS_TAG_RE = re.compile(r'<w:rFonts\b[^>]*>', re.IGNORECASE)
+_A_LATIN_TAG_RE = re.compile(r'<a:latin\b[^>]*>', re.IGNORECASE)
+_RUN_TAG_RE = re.compile(r'<w:r\b[^>]*>.*?</w:r>', re.IGNORECASE | re.DOTALL)
+_TEXT_TAG_RE = re.compile(r'<w:t\b[^>]*>(.*?)</w:t>', re.IGNORECASE | re.DOTALL)
+_ARABIC_CHAR_RE = re.compile(r'[\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff]')
+_ASCII_ALNUM_RE = re.compile(r'[A-Za-z0-9]')
+
+
+def _xml_attr(tag: str, attr: str):
+    match = re.search(rf'\s+w:{re.escape(attr)}=([\"\'])(.*?)\1', tag, re.IGNORECASE)
+    return match.group(2) if match else None
+
+
+def _set_w_attr(tag: str, attr: str, value: str) -> str:
+    pattern = re.compile(rf'(\s+w:{re.escape(attr)}=)([\"\']).*?\2', re.IGNORECASE)
+    if pattern.search(tag):
+        return pattern.sub(lambda m: f'{m.group(1)}{m.group(2)}{value}{m.group(2)}', tag, count=1)
+    pos = tag.rfind('/>')
+    if pos < 0:
+        pos = tag.rfind('>')
+    return tag[:pos] + f' w:{attr}="{value}"' + tag[pos:]
+
+
+def _remove_w_attr(tag: str, attr: str) -> str:
+    return re.sub(rf'\s+w:{re.escape(attr)}=([\"\']).*?\1', '', tag, flags=re.IGNORECASE)
+
+
+def _patch_rfonts_tag(tag: str):
+    original = tag
+    for direct_attr in ('ascii', 'hAnsi'):
+        current = _xml_attr(tag, direct_attr)
+        mapped = _DOCX_LATIN_FONT_MAP.get(current or '')
+        if mapped:
+            tag = _set_w_attr(tag, direct_attr, mapped)
+
+    for theme_attr, direct_attr in (('asciiTheme', 'ascii'), ('hAnsiTheme', 'hAnsi')):
+        theme = _xml_attr(tag, theme_attr)
+        mapped = _DOCX_THEME_WESTERN_MAP.get(theme or '')
+        if mapped:
+            tag = _set_w_attr(tag, direct_attr, mapped)
+            tag = _remove_w_attr(tag, theme_attr)
+    return tag, tag != original
+
+
+def _patch_theme_latin_tag(tag: str):
+    original = tag
+    match = re.search(r'\s+typeface=([\"\'])(.*?)\1', tag, re.IGNORECASE)
+    if not match:
+        return tag, False
+    current = match.group(2)
+    mapped = _DOCX_LATIN_FONT_MAP.get(current)
+    if not mapped:
+        return tag, False
+    tag = re.sub(
+        r'(\s+typeface=)([\"\']).*?\2',
+        lambda m: f'{m.group(1)}{m.group(2)}{mapped}{m.group(2)}',
+        tag,
+        count=1,
+        flags=re.IGNORECASE,
+    )
+    return tag, tag != original
+
+
+def _patch_latin_only_run(run_xml: str):
+    # In RTL Word runs, LibreOffice may render even pure Latin text/digits using
+    # the complex-script font. Resolve only those Latin-only runs. Arabic runs
+    # keep their original complex-script/theme font to preserve shaping.
+    text_parts = _TEXT_TAG_RE.findall(run_xml)
+    if not text_parts:
+        return run_xml, False
+    text = html.unescape(''.join(re.sub(r'<[^>]+>', '', part) for part in text_parts))
+    if _ARABIC_CHAR_RE.search(text) or not _ASCII_ALNUM_RE.search(text):
+        return run_xml, False
+
+    rfonts = _R_FONTS_TAG_RE.search(run_xml)
+    if not rfonts:
+        return run_xml, False
+    tag = rfonts.group(0)
+    western = _xml_attr(tag, 'ascii') or _xml_attr(tag, 'hAnsi')
+    if not western:
+        theme = _xml_attr(tag, 'asciiTheme') or _xml_attr(tag, 'hAnsiTheme')
+        western = _DOCX_THEME_WESTERN_MAP.get(theme or '')
+    if not western:
+        return run_xml, False
+
+    patched = _set_w_attr(tag, 'cs', western)
+    patched = _remove_w_attr(patched, 'cstheme')
+    patched = _remove_w_attr(patched, 'csTheme')
+    if patched == tag:
+        return run_xml, False
+    return run_xml[:rfonts.start()] + patched + run_xml[rfonts.end():], True
+
+
+def _prepare_docx_font_fidelity(src: Path, dest: Path):
+    changed_tags = 0
+    with zipfile.ZipFile(src, 'r') as zin, zipfile.ZipFile(dest, 'w', compression=zipfile.ZIP_DEFLATED) as zout:
+        for info in zin.infolist():
+            data = zin.read(info.filename)
+            if info.filename.startswith('word/') and info.filename.endswith('.xml'):
+                try:
+                    text = data.decode('utf-8')
+                except UnicodeDecodeError:
+                    text = None
+                if text is not None:
+                    def rfonts_repl(match):
+                        nonlocal changed_tags
+                        patched, changed = _patch_rfonts_tag(match.group(0))
+                        changed_tags += int(changed)
+                        return patched
+
+                    text = _R_FONTS_TAG_RE.sub(rfonts_repl, text)
+
+                    # After western theme references are resolved, make sure
+                    # Latin-only/digit runs inside RTL paragraphs do not fall
+                    # back to the Arabic/complex-script substitute.
+                    if info.filename.startswith('word/') and info.filename != 'word/theme/theme1.xml':
+                        def run_repl(match):
+                            nonlocal changed_tags
+                            patched, changed = _patch_latin_only_run(match.group(0))
+                            changed_tags += int(changed)
+                            return patched
+                        text = _RUN_TAG_RE.sub(run_repl, text)
+
+                    if info.filename == 'word/theme/theme1.xml':
+                        def latin_repl(match):
+                            nonlocal changed_tags
+                            patched, changed = _patch_theme_latin_tag(match.group(0))
+                            changed_tags += int(changed)
+                            return patched
+                        text = _A_LATIN_TAG_RE.sub(latin_repl, text)
+                    data = text.encode('utf-8')
+            zout.writestr(info, data)
+
+    # Validate the generated package before passing it to LibreOffice.
+    with zipfile.ZipFile(dest, 'r') as check:
+        if check.testzip() is not None or 'word/document.xml' not in check.namelist():
+            raise RuntimeError('DOCX font-fidelity package validation failed')
+    return changed_tags
+
+
+def _libreoffice_convert(src: Path, workdir: Path) -> Path:
+    workdir.mkdir(parents=True, exist_ok=True)
+    profile = workdir / ('lo-profile-' + secrets.token_hex(6))
     profile.mkdir(parents=True, exist_ok=True)
     cmd = [
         'libreoffice', '--headless', '--nologo', '--nodefault', '--nofirststartwizard', '--norestore',
-        f'-env:UserInstallation=file://{profile}', '--convert-to', 'pdf', '--outdir', str(outdir), str(src)
+        f'-env:UserInstallation=file://{profile}', '--convert-to', 'pdf', '--outdir', str(workdir), str(src)
     ]
     _run(cmd)
-    out = outdir / f'{src.stem}.pdf'
+    out = workdir / f'{src.stem}.pdf'
     if not out.exists() or out.stat().st_size < 500:
-        candidates = sorted(outdir.glob('*.pdf'), key=lambda p: p.stat().st_mtime, reverse=True)
+        candidates = sorted(workdir.glob('*.pdf'), key=lambda p: p.stat().st_mtime, reverse=True)
         if not candidates:
             raise RuntimeError('LibreOffice did not produce a PDF')
         out = candidates[0]
     return out
+
+
+def _pdf_layout_signature(path: Path):
+    if fitz is None:
+        return None
+    doc = fitz.open(path)
+    try:
+        pages = []
+        for page in doc:
+            rect = page.rect
+            text_dict = page.get_text('dict')
+            line_count = 0
+            for block in text_dict.get('blocks', []):
+                if block.get('type') == 0:
+                    line_count += len(block.get('lines', []))
+            pages.append((round(rect.width, 1), round(rect.height, 1), line_count))
+        return pages
+    finally:
+        doc.close()
+
+
+def _font_fidelity_layout_safe(baseline: Path, candidate: Path) -> bool:
+    base_sig = _pdf_layout_signature(baseline)
+    cand_sig = _pdf_layout_signature(candidate)
+    if base_sig is None or cand_sig is None:
+        return True
+    if len(base_sig) != len(cand_sig):
+        return False
+    for (bw, bh, blines), (cw, ch, clines) in zip(base_sig, cand_sig):
+        if abs(bw - cw) > 1.0 or abs(bh - ch) > 1.0:
+            return False
+        # A font substitution that materially changes wrapping is more likely to
+        # hurt fidelity than help it. Small changes are allowed.
+        if abs(blines - clines) > max(2, int(max(blines, 1) * 0.08)):
+            return False
+    return True
+
+
+def _office_to_pdf(src: Path, outdir: Path) -> Path:
+    if src.suffix.lower() != '.docx':
+        return _libreoffice_convert(src, outdir)
+
+    # Keep a baseline conversion as an automatic safety net. This costs one
+    # extra LibreOffice pass for DOCX, but prevents a font override from turning
+    # a one-page document into two pages or changing the page geometry.
+    baseline = _libreoffice_convert(src, outdir / 'baseline')
+    try:
+        patched_src = outdir / 'input-font-fidelity.docx'
+        changed = _prepare_docx_font_fidelity(src, patched_src)
+        if changed == 0:
+            return baseline
+        candidate = _libreoffice_convert(patched_src, outdir / 'font-fidelity')
+        if _font_fidelity_layout_safe(baseline, candidate):
+            app.logger.info('DOCX font fidelity applied (%s font tags)', changed)
+            return candidate
+        app.logger.warning('DOCX font fidelity rejected by layout guard; using baseline')
+    except Exception:
+        app.logger.exception('DOCX font fidelity preprocessing failed; using baseline')
+    return baseline
 
 
 def _protect(src: Path, out: Path, user_password: str, owner_password: str):
