@@ -23,3 +23,6 @@ See `DEPLOY_PROCESSING_SERVICE.md` when you are ready to enable the advanced pro
 
 ## V15 Font Fidelity Layer
 The processing container now installs metric-compatible Office font families and Fontconfig aliases for Arial, Calibri, Cambria, Times New Roman, Courier New and Segoe UI. This is backend-only; the user still sees one simple conversion flow.
+### V15.1 backend note
+The Word-to-PDF server engine now includes a guarded DOCX font-theme override for higher fidelity with Microsoft Office fonts, with automatic fallback to the baseline conversion if the override changes layout materially.
+
