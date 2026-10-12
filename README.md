@@ -1,28 +1,15 @@
-# DocMivo V14 — Simplified Pro
+# DocMivo v16-adsense-recovery
 
-V14 focuses on one clear experience per task:
+V16 focuses on publisher-content quality and a cleaner index footprint while preserving the V15.1 conversion backend.
 
-- One visible tool per job — no Standard vs High Quality choices.
-- The site chooses the best available processing path automatically.
-- Technical implementation details are removed from the normal user interface.
-- Advanced tools appear on the homepage only when the processing service is configured.
-- AI tools use short, user-facing privacy language while provider details remain in the privacy policy.
-- The processing service now uses Python libraries where they improve reliability:
-  - `pikepdf` for encryption/decryption/repair when available.
-  - `PyMuPDF` for embedded image extraction.
-  - LibreOffice for Office → PDF fidelity.
-  - OCRmyPDF + Tesseract for searchable OCR.
+## V16 changes
+- Rewrote 16 existing guides as topic-specific editorial content and added 4 new deep guides.
+- Added `/quality` explaining how conversion/OCR/PDF tools are tested.
+- Homepage now surfaces useful editorial content rather than only tool cards.
+- Curated 20 stable tool pages for indexing; secondary/experimental utility pages are `noindex,follow`.
+- AdSense scripts are removed from noindex/experimental pages and the 404 page.
+- AI beta pages remain noindex and ad-free.
+- Sitemap now contains only curated indexable pages with `2026-10-12` lastmod.
+- V15.1 Word-to-PDF font-fidelity backend is preserved unchanged.
 
-## Deployment
-
-Upload the whole project to the existing GitHub repository and let Vercel redeploy.
-
-The main website works without the external processing service. Word/Excel keep a browser fallback and automatically use the stronger service once it is configured. Advanced server-only tools stay hidden from the homepage until that service is available.
-
-See `DEPLOY_PROCESSING_SERVICE.md` when you are ready to enable the advanced processing service.
-
-## V15 Font Fidelity Layer
-The processing container now installs metric-compatible Office font families and Fontconfig aliases for Arial, Calibri, Cambria, Times New Roman, Courier New and Segoe UI. This is backend-only; the user still sees one simple conversion flow.
-### V15.1 backend note
-The Word-to-PDF server engine now includes a guarded DOCX font-theme override for higher fidelity with Microsoft Office fonts, with automatic fallback to the baseline conversion if the override changes layout materially.
-
+Before requesting an AdSense review, deploy V16 and allow Google to recrawl the updated sitemap/pages.
