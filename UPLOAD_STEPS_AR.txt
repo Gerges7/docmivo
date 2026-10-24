@@ -1,0 +1,11 @@
+DocMivo V17 — ملفات جاهزة للرفع من المتصفح
+
+1) فك ضغط هذا ZIP على جهازك. لا ترفع ملف ZIP نفسه إلى GitHub.
+2) افتح https://github.com/Gerges7/docmivo
+3) من main: Add file > Upload files.
+4) اسحب محتويات هذا المجلد إلى منطقة الرفع، وخصوصًا المجلدات assets وtools وguides وv17-preview، بحيث يحتفظ GitHub بالمسارات الداخلية. راجع قائمة الملفات على GitHub قبل الحفظ للتأكد من أنها تظهر هكذا: assets/js/v17-qr.js وtools/qr-code/index.html، وليس assets/assets/js أو v17-upload/assets.
+5) أسفل صفحة الرفع اختر Create a new branch for this commit وسمه feat/v17-quality-qr-image-tools، وليس Commit directly to main.
+6) Propose changes > Open draft pull request. لا تضغط Merge.
+7) رابط المعاينة بعد تفعيل Preview Deployment: /v17-preview (قد يحتاج تفعيل Preview حسب إعدادات Vercel).
+
+هذه حزمة الإضافات الجديدة فقط. الإصلاحات الخاصة بملفات V16 الحالية موجودة ضمن حزمة V17 Review Patch المنفصلة، ولم تُدمج هنا حتى لا تحتاج أي أوامر أو تعديل يدوي لتشغيل أول دفعة. لا تنشر Production قبل الاختبار.
