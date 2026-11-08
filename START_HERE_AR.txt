@@ -1,0 +1,14 @@
+DocMivo — Cloudflare V18
+
+1. فك ضغط الملف.
+2. افتح GitHub > Gerges7/docmivo > Add file > Upload files.
+3. ارفع مجلد cloudflare بالكامل إلى جذر المستودع (تأكد أن المسار cloudflare/wrangler.jsonc).
+4. في Cloudflare Workers ابدأ مشروعًا من GitHub repo docmivo:
+   Root directory = cloudflare
+   Worker name = docmivo-cloudflare
+   Build command = npm run test && npm run build
+   Deploy command = npx wrangler deploy
+5. اختبر النسخة على workers.dev قبل ربط getdocmivo.com.
+6. اقرأ cloudflare/README_AR.md لتهيئة خدمات API والأمان وخطة AdSense.
+
+مهم: هذا الملف لا يحتوي على نسخة الموقع الكاملة؛ هو ترحيل "إضافي" يعمل عندما ترفعه داخل المستودع الأصلي، لا عندما تنشره وحده. ملفات Vercel الأصلية لا تُستبدل.
