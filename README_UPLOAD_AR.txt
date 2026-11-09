@@ -1,14 +1,16 @@
-DocMivo V18.8 — تحديث مجمّع V18.7 Layout + V18.8 SEO/OCR
+DocMivo V18.9 — روابط الأدوات المتوقفة وشفافية المحتوى
 
-1) فك الضغط.
-2) ارفع مجلد cloudflare بمحتوياته كما هو إلى:
-   https://github.com/Gerges7/docmivo
-   GitHub → Add file → Upload files → Commit changes on main.
-3) ليس مطلوبًا نقل ملفات خارج cloudflare؛ Root Directory في Cloudflare مضبوط على cloudflare.
-4) Cloudflare سيشغّل: npm run test && npm run build ثم npx wrangler deploy.
-5) لو فشل Build، افتح Logs قبل محاولة تعديل أي إعدادات. هذا التحديث يتوقع بنية مشروع V18.6 الحالية.
-6) افحص الرئيسية والـSitemap والـQR وResize وOCR بعد ظهور Ready.
+1) افتح ملف ZIP وفك ضغطه.
+2) ارفع مجلد cloudflare بمساراته إلى GitHub: Gerges7/docmivo > main > Add file > Upload files.
+3) لا ترفع ZIP نفسه، ولا تضع ملفات scripts في جذر المستودع. المسار الصحيح: cloudflare/scripts/content-trust-hardening.mjs
+4) حافظ على ملفات V18.8 الحالية؛ V18.9 إضافة فوقها وليس استبدالًا للمشروع كله.
+5) انتظر Cloudflare Auto Deploy وراجع Build Logs وحالة Ready.
+6) اختبر /guides/word-to-pdf-guide و/quality؛ اقرأ التقرير داخل cloudflare/QA_REPORT_V18_9_AR.md.
 
-مهم: الحزمة تحتوي V18.7 كذلك، لأن آخر نسخة رُصدت على GitHub كانت V18.6.
-لا تغيّر سجلات DNS أو Vercel/Cloudflare Workers ولا تضع أي مفاتيح خاصة في GitHub.
-اقرأ cloudflare/READINESS_AUDIT_V18_8_AR.md للمخاطر ونتائج الاختبارات.
+ملفات التحديث:
+- cloudflare/package.json
+- cloudflare/scripts/content-trust-hardening.mjs
+- cloudflare/tests/content-trust-hardening.test.mjs
+- cloudflare/QA_REPORT_V18_9_AR.md
+
+مهم: 108/108 اختبارات بيئة تكامل محلية؛ لم يتم نشر التحديث أو إجراء اختبار Live بعد الرفع.
