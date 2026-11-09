@@ -1,10 +1,10 @@
 {
   "name": "docmivo-cloudflare",
   "private": true,
-  "version": "19.0.0",
+  "version": "19.1.0",
   "type": "module",
   "scripts": {
-    "build": "node scripts/build-cloudflare.mjs && node scripts/cloudflare-only-cleanup.mjs && node scripts/pdf-page-hardening.mjs && node scripts/qr-color-picker-ui.mjs && node scripts/pdf-quality-hardening.mjs && node scripts/pdf-images-text-quality.mjs && node scripts/ocr-readability-hardening.mjs && node scripts/layout-quality.mjs && node scripts/seo-readiness.mjs && node scripts/content-trust-hardening.mjs && node scripts/editorial-ad-readiness.mjs",
+    "build": "node scripts/build-cloudflare.mjs && node scripts/cloudflare-only-cleanup.mjs && node scripts/pdf-page-hardening.mjs && node scripts/qr-color-picker-ui.mjs && node scripts/pdf-quality-hardening.mjs && node scripts/pdf-images-text-quality.mjs && node scripts/ocr-readability-hardening.mjs && node scripts/layout-quality.mjs && node scripts/seo-readiness.mjs && node scripts/content-trust-hardening.mjs && node scripts/editorial-ad-readiness.mjs && node scripts/editorial-wave2.mjs",
     "test": "node --test tests/*.test.mjs",
     "dev": "npm run build && wrangler dev",
     "deploy": "npm run test && npm run build && wrangler deploy"

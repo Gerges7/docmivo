@@ -1,15 +1,19 @@
-DocMivo V19.0 — GitHub Upload
+DocMivo V19.1 — Tool Content & SEO QA
+====================================
 
-1) فك ضغط ZIP.
-2) افتح https://github.com/Gerges7/docmivo على branch: main.
-3) اختر Add file > Upload files.
-4) ارفع مجلد cloudflare بمحتوياته، محافظًا على المسارات الأصلية.
-   لا تضع مجلدًا اسمه cloudflare داخل cloudflare الحالي.
-5) Commit changes. Cloudflare سيبني النسخة تلقائيًا إذا بقي Git integration مفعلًا.
-6) تأكد أن النشر Ready، ثم افتح:
-   https://getdocmivo.com/tools/merge-pdf
-   https://getdocmivo.com/tools/ocr-pdf
-   https://getdocmivo.com/ads.txt
+الرفع على GitHub:
+1. افتح ملف ZIP وفك الضغط.
+2. افتح GitHub → Gerges7/docmivo → الفرع main → Add file → Upload files.
+3. ارفع محتويات مجلد cloudflare بنفس ترتيب المجلدات، ولا تنقل الملفات إلى جذر المشروع.
+4. وافق على استبدال cloudflare/package.json الحالي وأضف ملفات scripts وtests وQA report.
+5. Commit changes، ثم راجع Cloudflare → docmivo → Deployments وتأكد من Ready.
 
-مهم: رفع ZIP كما هو مباشرة في المستودع لا يحدّث الملفات؛ فك الضغط أولًا.
-ليس في الحزمة تغيير DNS أو Worker runtime أو أسرار أو حساب Vercel.
+الملفات التي يتم إضافتها/تحديثها:
+- cloudflare/package.json
+- cloudflare/scripts/editorial-wave2.mjs
+- cloudflare/tests/editorial-wave2.test.mjs
+- cloudflare/QA_REPORT_V19_1_AR.md
+
+التحديث لا يغير DNS أو Email Routing أو رمز AdSense أو ملفات Vercel.
+الأدوات التي تحتاج اختبارًا بعد النشر: PDF to JPG، PDF to WebP، Page Numbers.
+مهم: لا تضغط Request review في AdSense حتى نفحص نواتج الأدوات والصفحات الباقية.
