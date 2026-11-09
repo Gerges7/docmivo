@@ -1,16 +1,15 @@
-DocMivo V18.9 — روابط الأدوات المتوقفة وشفافية المحتوى
+DocMivo V19.0 — GitHub Upload
 
-1) افتح ملف ZIP وفك ضغطه.
-2) ارفع مجلد cloudflare بمساراته إلى GitHub: Gerges7/docmivo > main > Add file > Upload files.
-3) لا ترفع ZIP نفسه، ولا تضع ملفات scripts في جذر المستودع. المسار الصحيح: cloudflare/scripts/content-trust-hardening.mjs
-4) حافظ على ملفات V18.8 الحالية؛ V18.9 إضافة فوقها وليس استبدالًا للمشروع كله.
-5) انتظر Cloudflare Auto Deploy وراجع Build Logs وحالة Ready.
-6) اختبر /guides/word-to-pdf-guide و/quality؛ اقرأ التقرير داخل cloudflare/QA_REPORT_V18_9_AR.md.
+1) فك ضغط ZIP.
+2) افتح https://github.com/Gerges7/docmivo على branch: main.
+3) اختر Add file > Upload files.
+4) ارفع مجلد cloudflare بمحتوياته، محافظًا على المسارات الأصلية.
+   لا تضع مجلدًا اسمه cloudflare داخل cloudflare الحالي.
+5) Commit changes. Cloudflare سيبني النسخة تلقائيًا إذا بقي Git integration مفعلًا.
+6) تأكد أن النشر Ready، ثم افتح:
+   https://getdocmivo.com/tools/merge-pdf
+   https://getdocmivo.com/tools/ocr-pdf
+   https://getdocmivo.com/ads.txt
 
-ملفات التحديث:
-- cloudflare/package.json
-- cloudflare/scripts/content-trust-hardening.mjs
-- cloudflare/tests/content-trust-hardening.test.mjs
-- cloudflare/QA_REPORT_V18_9_AR.md
-
-مهم: 108/108 اختبارات بيئة تكامل محلية؛ لم يتم نشر التحديث أو إجراء اختبار Live بعد الرفع.
+مهم: رفع ZIP كما هو مباشرة في المستودع لا يحدّث الملفات؛ فك الضغط أولًا.
+ليس في الحزمة تغيير DNS أو Worker runtime أو أسرار أو حساب Vercel.
