@@ -1,26 +1,14 @@
-DocMivo V18.7 — تحسين الـLayout والموبايل، 9 نوفمبر 2026
+DocMivo V18.8 — تحديث مجمّع V18.7 Layout + V18.8 SEO/OCR
 
-الرفع على GitHub:
-1) فك ضغط DocMivo_V18_7_Layout_UX_Upgrade.zip
-2) افتح https://github.com/Gerges7/docmivo ثم main > Add file > Upload files.
-3) ارفع المجلد cloudflare كاملًا مع الاحتفاظ بالمسارات كما هي.
-4) وافق على استبدال cloudflare/package.json، وأضف الملفات الجديدة.
-5) Commit changes على main ثم راجع Cloudflare Deployments.
+1) فك الضغط.
+2) ارفع مجلد cloudflare بمحتوياته كما هو إلى:
+   https://github.com/Gerges7/docmivo
+   GitHub → Add file → Upload files → Commit changes on main.
+3) ليس مطلوبًا نقل ملفات خارج cloudflare؛ Root Directory في Cloudflare مضبوط على cloudflare.
+4) Cloudflare سيشغّل: npm run test && npm run build ثم npx wrangler deploy.
+5) لو فشل Build، افتح Logs قبل محاولة تعديل أي إعدادات. هذا التحديث يتوقع بنية مشروع V18.6 الحالية.
+6) افحص الرئيسية والـSitemap والـQR وResize وOCR بعد ظهور Ready.
 
-ما بداخل ZIP:
-- cloudflare/package.json (يضيف layout-quality.mjs آخر خطوة في البناء)
-- cloudflare/scripts/layout-quality.mjs
-- cloudflare/tests/layout-quality.test.mjs
-- cloudflare/LAYOUT_AUDIT_V18_7_AR.md
-
-لا ترفع ZIP نفسه كملف وحيد إلى GitHub؛ ارفع الملفات بعد فك الضغط.
-
-التحقق بعد النشر:
-- افتح getdocmivo.com: ستجد بداية سريعة و12 كارت وزر «عرض كل الأدوات».
-- جرب البحث والتصنيف، وتأكد من إظهار جميع النتائج عند البحث.
-- من الموبايل جرّب زر القائمة، ثم QR/image-resize وتأكّد من ظهور روابط التنقل.
-- افتح /tools/word-to-pdf: الشكل موحّد مع DocMivo ورسالة واضحة.
-- راجع أن دمج PDF وOCR لا يزالان ينفّذان العمل المعتاد.
-
-تمت 87/87 اختبارات محلية وبناء تجريبي. لم نرفع إلى GitHub ولم ننشر إلى Cloudflare.
-أي تغير غير متوقع في قوالب الموقع سيوقف البناء مع رسالة صريحة بدل تطبيق تعديل ناقص.
+مهم: الحزمة تحتوي V18.7 كذلك، لأن آخر نسخة رُصدت على GitHub كانت V18.6.
+لا تغيّر سجلات DNS أو Vercel/Cloudflare Workers ولا تضع أي مفاتيح خاصة في GitHub.
+اقرأ cloudflare/READINESS_AUDIT_V18_8_AR.md للمخاطر ونتائج الاختبارات.
