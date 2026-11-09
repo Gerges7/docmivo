@@ -4,7 +4,7 @@
   "version": "18.1.0",
   "type": "module",
   "scripts": {
-    "build": "node scripts/build-cloudflare.mjs && node scripts/cloudflare-only-cleanup.mjs",
+    "build": "node scripts/build-cloudflare.mjs && node scripts/cloudflare-only-cleanup.mjs && node scripts/pdf-page-hardening.mjs",
     "test": "node --test tests/*.test.mjs",
     "dev": "npm run build && wrangler dev",
     "deploy": "npm run test && npm run build && wrangler deploy"
