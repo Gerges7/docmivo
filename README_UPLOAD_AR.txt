@@ -1,16 +1,25 @@
-DocMivo V18.5 - Cloudflare-only quality patch
-==============================================
+DocMivo V18.6 — Improved OCR readability (Cloudflare-only)
+======================================================
 
-1) فك الضغط.
-2) في GitHub افتح Gerges7/docmivo على فرع main.
-3) اضغط Add file > Upload files وارفع مجلد cloudflare بمحتوياته، مع الاحتفاظ بالمسارات.
-4) التحديث يضيف/يحدث الملفات فقط:
-   cloudflare/package.json
-   cloudflare/scripts/pdf-images-text-quality.mjs
-   cloudflare/tests/pdf-images-text-quality.test.mjs
-5) Commit changes. بعد ذلك Cloudflare سيشغّل Build وDeploy إن بقيت الإعدادات الحالية مفعلة.
-6) راجع Deployments وتأكد أن أحدث Commit يظهر Ready.
-7) استخدم حزمة QA المنفصلة لاختبار الصور وExtract Text ثم أرسل النواتج للمقارنة.
+رفع التحديث إلى GitHub:
+1) فك ضغط هذا الملف.
+2) افتح Gerges7/docmivo على فرع main.
+3) من Add file -> Upload files، ارفع المجلد cloudflare بمحتوياته مع الحفاظ على المسارات.
+4) اعمل Commit وتأكد أن Cloudflare Deployment وصل Ready (من GitHub commit الجديد).
+5) افتح https://getdocmivo.com/tools/ocr-pdf وحدث Ctrl+F5.
 
-هام: لا ترفع محتويات QA input إلى GitHub؛ هي عينات تجريبية وليست ضمن مصدر الموقع.
-لا يتطلب التحديث تحديث wrangler.jsonc أو تغيير الدومين.
+التغييرات:
+- خيار دقة OCR: سريعة 1.7×، متوازنة 2.8× (افتراضي)، ونص صغير 3.5×، بحد أقصى للبكسلات.
+- خيار نمط توزيع النص: تلقائي (PSM 3)، كتلة نص (PSM 6)، سطر واحد (PSM 7).
+- لا تغيير لمحرك Tesseract ولا لفورمات الناتج TXT ولا للـAPI أو Cloudflare domain.
+
+التحقق بعد الرفع:
+- استخدم DocMivo_OCR_Clear_Reference.pdf مع English / متوازنة / تلقائي؛ يجب ظهور الأسطر الخمسة السابقة.
+- استخدم DocMivo_QA_Scanned_1Page.pdf مع English / نص صغير / كتلة نص؛ قارن الناتج يدويًا بالعينة.
+- لو الصورة منخفضة الجودة، تكرار OCR قد يبقي أخطاء؛ ما تعتبرش النص صالحًا قانونيًا/ماليًا بدون مراجعة.
+
+الاختبارات:
+- 77/77 Node tests OK في نسخة التكامل المحلية التي تحتفظ بإصلاحات V18.2-V18.5.
+- Cloudflare build script طبق كل الإصلاحات بالترتيب.
+- اختبار Tesseract CLI مستقل على العينة الصغيرة أظهر تحسنًا عند التكبير (مؤشر فقط؛ ليس اختبارًا للمتصفح).
+- لم يُرفع هذا التحديث إلى GitHub ولم يُختبر على الموقع المنشور حتى الآن.
