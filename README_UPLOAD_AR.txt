@@ -1,25 +1,26 @@
-DocMivo V18.6 — Improved OCR readability (Cloudflare-only)
-======================================================
+DocMivo V18.7 — تحسين الـLayout والموبايل، 9 نوفمبر 2026
 
-رفع التحديث إلى GitHub:
-1) فك ضغط هذا الملف.
-2) افتح Gerges7/docmivo على فرع main.
-3) من Add file -> Upload files، ارفع المجلد cloudflare بمحتوياته مع الحفاظ على المسارات.
-4) اعمل Commit وتأكد أن Cloudflare Deployment وصل Ready (من GitHub commit الجديد).
-5) افتح https://getdocmivo.com/tools/ocr-pdf وحدث Ctrl+F5.
+الرفع على GitHub:
+1) فك ضغط DocMivo_V18_7_Layout_UX_Upgrade.zip
+2) افتح https://github.com/Gerges7/docmivo ثم main > Add file > Upload files.
+3) ارفع المجلد cloudflare كاملًا مع الاحتفاظ بالمسارات كما هي.
+4) وافق على استبدال cloudflare/package.json، وأضف الملفات الجديدة.
+5) Commit changes على main ثم راجع Cloudflare Deployments.
 
-التغييرات:
-- خيار دقة OCR: سريعة 1.7×، متوازنة 2.8× (افتراضي)، ونص صغير 3.5×، بحد أقصى للبكسلات.
-- خيار نمط توزيع النص: تلقائي (PSM 3)، كتلة نص (PSM 6)، سطر واحد (PSM 7).
-- لا تغيير لمحرك Tesseract ولا لفورمات الناتج TXT ولا للـAPI أو Cloudflare domain.
+ما بداخل ZIP:
+- cloudflare/package.json (يضيف layout-quality.mjs آخر خطوة في البناء)
+- cloudflare/scripts/layout-quality.mjs
+- cloudflare/tests/layout-quality.test.mjs
+- cloudflare/LAYOUT_AUDIT_V18_7_AR.md
 
-التحقق بعد الرفع:
-- استخدم DocMivo_OCR_Clear_Reference.pdf مع English / متوازنة / تلقائي؛ يجب ظهور الأسطر الخمسة السابقة.
-- استخدم DocMivo_QA_Scanned_1Page.pdf مع English / نص صغير / كتلة نص؛ قارن الناتج يدويًا بالعينة.
-- لو الصورة منخفضة الجودة، تكرار OCR قد يبقي أخطاء؛ ما تعتبرش النص صالحًا قانونيًا/ماليًا بدون مراجعة.
+لا ترفع ZIP نفسه كملف وحيد إلى GitHub؛ ارفع الملفات بعد فك الضغط.
 
-الاختبارات:
-- 77/77 Node tests OK في نسخة التكامل المحلية التي تحتفظ بإصلاحات V18.2-V18.5.
-- Cloudflare build script طبق كل الإصلاحات بالترتيب.
-- اختبار Tesseract CLI مستقل على العينة الصغيرة أظهر تحسنًا عند التكبير (مؤشر فقط؛ ليس اختبارًا للمتصفح).
-- لم يُرفع هذا التحديث إلى GitHub ولم يُختبر على الموقع المنشور حتى الآن.
+التحقق بعد النشر:
+- افتح getdocmivo.com: ستجد بداية سريعة و12 كارت وزر «عرض كل الأدوات».
+- جرب البحث والتصنيف، وتأكد من إظهار جميع النتائج عند البحث.
+- من الموبايل جرّب زر القائمة، ثم QR/image-resize وتأكّد من ظهور روابط التنقل.
+- افتح /tools/word-to-pdf: الشكل موحّد مع DocMivo ورسالة واضحة.
+- راجع أن دمج PDF وOCR لا يزالان ينفّذان العمل المعتاد.
+
+تمت 87/87 اختبارات محلية وبناء تجريبي. لم نرفع إلى GitHub ولم ننشر إلى Cloudflare.
+أي تغير غير متوقع في قوالب الموقع سيوقف البناء مع رسالة صريحة بدل تطبيق تعديل ناقص.
