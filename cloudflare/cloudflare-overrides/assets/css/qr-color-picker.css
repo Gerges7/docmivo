@@ -1,0 +1,46 @@
+/* DocMivo V18.3 — compact, accessible QR palette picker. */
+.v17-wrap .v17-color-fields{gap:14px;align-items:start}
+.v17-wrap .v17-color-picker{
+  position:relative;display:flex;align-items:center;gap:11px;min-height:56px;
+  padding:9px 12px;background:#fff;border:1px solid #cbd5e1;border-radius:13px;
+  box-sizing:border-box;cursor:pointer;transition:border-color .16s,box-shadow .16s;
+}
+.v17-wrap .v17-color-picker:hover{border-color:#8b80f7;background:#fdfcff}
+.v17-wrap .v17-color-picker:focus-within{border-color:#635bff;box-shadow:0 0 0 3px rgba(99,91,255,.17)}
+.v17-wrap .v17-color-swatch{
+  display:block;flex:0 0 36px;width:36px;height:36px;
+  background:var(--swatch-color,#111827);border-radius:10px;
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.18),0 2px 5px rgba(15,23,42,.08)
+}
+.v17-wrap .v17-color-hex{font:700 13px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.02em;color:#334155;direction:ltr;unicode-bidi:isolate}
+.v17-wrap .v17-color-trigger{margin-inline-start:auto;color:#64748b;font-size:12px;white-space:nowrap}
+/* Native palette remains clickable + keyboard accessible, but never paints a large color-wheel widget. */
+.v17-wrap .v17-color-picker input[type="color"]{
+  position:absolute!important;inset:0!important;width:100%!important;max-width:none!important;
+  min-width:0!important;height:100%!important;min-height:0!important;
+  padding:0!important;margin:0!important;border:0!important;
+  border-radius:13px!important;opacity:0!important;cursor:pointer!important;
+  appearance:auto!important;z-index:2;box-sizing:border-box!important
+}
+.v17-wrap .v17-quick-colors{display:flex;gap:8px;flex-wrap:wrap;margin:-2px 0 14px}
+.v17-wrap .v17-color-preset{
+  appearance:none;display:inline-flex;gap:7px;align-items:center;
+  border:1px solid #dbe1ea;background:#fff;color:#334155;cursor:pointer;
+  padding:8px 12px;border-radius:999px;min-height:37px;
+  font-size:12px;line-height:1.3;font-weight:650;font-family:inherit;transition:border-color .16s,background-color .16s
+}
+.v17-wrap .v17-color-preset:hover{border-color:#a5b4fc;background:#f5f3ff}
+.v17-wrap .v17-color-preset:focus-visible{outline:3px solid #c7d2fe;outline-offset:2px}
+.v17-wrap .v17-color-preset[aria-pressed="true"]{border-color:#635bff;background:#f3f0ff;color:#4435b4}
+.v17-wrap .v17-preset-dot{width:15px;height:15px;flex:none;border-radius:50%;background:var(--preset-dark);box-shadow:inset 0 0 0 1px rgba(0,0,0,.12),0 0 0 2px var(--preset-light)}
+.v17-wrap .v17-color-help{font-size:12px;color:#64748b;margin:0 0 16px;line-height:1.7}
+.v17-wrap .v17-color-help[data-low-contrast="true"]{color:#b45309;font-weight:600}
+@media(max-width:700px){
+  .v17-wrap .v17-color-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .v17-wrap .v17-color-picker{gap:7px;padding:8px;min-height:53px}
+  .v17-wrap .v17-color-swatch{width:30px;height:30px;flex-basis:30px;border-radius:8px}
+  .v17-wrap .v17-color-trigger{display:none}
+  .v17-wrap .v17-color-hex{font-size:11px}
+}
+@media(max-width:360px){.v17-wrap .v17-color-fields{grid-template-columns:1fr}}
+@media print{.v17-wrap .v17-color-picker input[type="color"]{display:none!important}}
