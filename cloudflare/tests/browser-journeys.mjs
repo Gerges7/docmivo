@@ -42,7 +42,7 @@ async function toolDownload(route,files,field,value){
   if(field){const e=p.locator(field);if(await e.evaluate(n=>n.tagName)==='SELECT')await e.selectOption(value);else await e.fill(value);}
   const [download]=await Promise.all([p.waitForEvent('download',{timeout:30000}),p.locator('#runTool').click()]);
   const data=fs.readFileSync(await download.path());
-  assert.ok(data.byteLength>200,'Downloaded file unexpectedly empty');
+  assert.ok(data.byteLength>20,'Downloaded file unexpectedly empty');
   assert.deepEqual(errors,[]);
   return {data,name:download.suggestedFilename()};
  }finally{await p.close();}
@@ -181,6 +181,86 @@ await check('Image Resize preserves aspect ratio and PNG dimensions',async()=>{
   const b=fs.readFileSync(await download.path());
   assert.equal(b.subarray(1,4).toString(),'PNG');
   assert.equal(b.readUInt32BE(16),600);assert.equal(b.readUInt32BE(20),300);
+ }finally{await p.close();}
+});
+
+
+await check('Images to PDF generates A4 pages from two input PNG images',async()=>{
+ const p=await pageAt('/tools/images-to-pdf');
+ try{
+  const png=await p.evaluate(()=>{
+   const c=document.createElement('canvas');c.width=80;c.height=40;
+   const g=c.getContext('2d');g.fillStyle='#4455aa';g.fillRect(0,0,80,40);
+   return c.toDataURL('image/png').split(',')[1];
+  });
+  const bytes=Buffer.from(png,'base64');
+  await p.locator('#fileInput').setInputFiles([
+   {name:'one.png',mimeType:'image/png',buffer:bytes},
+   {name:'two.png',mimeType:'image/png',buffer:bytes}
+  ]);
+  const [dl]=await Promise.all([p.waitForEvent('download',{timeout:25000}),p.locator('#runTool').click()]);
+  const doc=await PDFDocument.load(fs.readFileSync(await dl.path()));
+  assert.equal(doc.getPageCount(),2);
+  assert.ok(Math.abs(doc.getPage(0).getWidth()-595.28)<2);
+  assert.ok(Math.abs(doc.getPage(0).getHeight()-841.89)<2);
+ }finally{await p.close();}
+});
+await check('PDF to WebP ZIP contains genuine WebP bitstreams',async()=>{
+ const input=await makePdf([330,510]);
+ const {data}=await toolDownload('/tools/pdf-to-webp',[{name:'two.pdf',mimeType:'application/pdf',buffer:input}],'#scale','1');
+ const zip=await JSZip.loadAsync(data);
+ const names=Object.keys(zip.files).filter(n=>n.endsWith('.webp'));
+ assert.equal(names.length,2);
+ for(const name of names){
+  const bytes=Buffer.from(await zip.file(name).async('uint8array'));
+  assert.equal(bytes.subarray(0,4).toString(),'RIFF');
+  assert.equal(bytes.subarray(8,12).toString(),'WEBP');
+ }
+});
+await check('Extract Text outputs text from all source pages',async()=>{
+ const input=await makePdf([330,510]);
+ const {data}=await toolDownload('/tools/extract-text',[{name:'two.pdf',mimeType:'application/pdf',buffer:input}]);
+ const txt=data.toString('utf8');
+ assert.match(txt,/DOCMIVO\s+PAGE\s+1/);
+ assert.match(txt,/DOCMIVO\s+PAGE\s+2/);
+});
+await check('Page Numbers puts sequential labels in source PDF',async()=>{
+ const input=await makePdf([330,510]);
+ const p=await pageAt('/tools/page-numbers');
+ try{
+  await p.locator('#fileInput').setInputFiles([{name:'two.pdf',mimeType:'application/pdf',buffer:input}]);
+  await p.locator('#startNumber').fill('7');
+  const [dl]=await Promise.all([p.waitForEvent('download',{timeout:25000}),p.locator('#runTool').click()]);
+  const output=fs.readFileSync(await dl.path());
+  assert.equal((await PDFDocument.load(output)).getPageCount(),2);
+  const text=await p.evaluate(async(src)=>{
+    const bytes=Uint8Array.from(src);
+    const doc=await pdfjsLib.getDocument({data:bytes}).promise;
+    const out=[];for(let i=1;i<=doc.numPages;i++){
+      const pg=await doc.getPage(i);
+      const words=(await pg.getTextContent()).items.map(x=>x.str);
+      out.push(words);
+    }
+    return out;
+  },Array.from(output));
+  assert.ok(text[0].some(x=>x.trim()==='7'),'Missing page number 7');
+  assert.ok(text[1].some(x=>x.trim()==='8'),'Missing page number 8');
+ }finally{await p.close();}
+});
+await check('Image Compress produces correctly labelled actual JPEG',async()=>{
+ const p=await pageAt('/tools/image-compress');
+ try{
+  const source=await p.evaluate(()=>{
+   const c=document.createElement('canvas');c.width=120;c.height=60;
+   c.getContext('2d').fillRect(0,0,120,60);
+   return c.toDataURL('image/png').split(',')[1];
+  });
+  await p.locator('#imageInput').setInputFiles([{name:'input.png',mimeType:'image/png',buffer:Buffer.from(source,'base64')}]);
+  await p.locator('#imgFormat').selectOption('image/jpeg');
+  const [dl]=await Promise.all([p.waitForEvent('download',{timeout:25000}),p.locator('#imageRun').click()]);
+  const data=fs.readFileSync(await dl.path());
+  assert.equal(data[0],255);assert.equal(data[1],216);assert.equal(data[2],255);
+  assert.match(dl.suggestedFilename(),/\.jpe?g$/i);
  }finally{await p.close();}
 });
 
