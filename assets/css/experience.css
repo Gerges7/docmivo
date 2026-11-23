@@ -25,3 +25,11 @@ html[data-theme=dark] .hero:before,html[data-theme=dark] .hero:after{opacity:.12
 html[data-theme=dark] canvas,html[data-theme=dark] img,html[data-theme=dark] video,html[data-theme=dark] svg{filter:none}
 @media(max-width:720px){.dm-preferences{gap:4px}.dm-language{width:88px;height:38px;font-size:12px;padding-inline:4px}.dm-theme-button{width:38px;min-width:38px;height:38px}.nav-inner{gap:7px!important}}
 @media(max-width:520px){.nav-actions>a.btn{display:none}.dm-language{width:76px;font-size:11px}.dm-language-notice{font-size:11px}}
+
+/* WCAG: high-contrast supporting copy in search and homepage sections. */
+html:not([data-theme=dark]) #dmResults,
+html:not([data-theme=dark]) .section-head p {color:#334155!important}
+html[data-theme=dark] #dmResults,
+html[data-theme=dark] .section-head p {color:#dbe4f0!important}
+html[lang]:not([lang=ar]) .nav {direction:ltr}
+html[lang]:not([lang=ar]) main[lang=ar] {direction:rtl;text-align:start}
