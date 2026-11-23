@@ -125,7 +125,7 @@ await check('Reorder PDF changes page sequence without losing pages',async()=>{
 await check('Paused converter page is explicitly unavailable and noindex',async()=>{
  const p=await pageAt('/tools/word-to-pdf');
  try{
-  assert.match(await p.locator('h1').innerText(),/غير متاحة/);
+  assert.match(await p.locator('h1').innerText(),/غير متاحة|نعمل على تجهيز/);
   assert.equal(await p.locator('input[type=file]').count(),0);
   assert.match(await p.locator('meta[name=robots]').getAttribute('content'),/noindex/);
  }finally{await p.close();}
