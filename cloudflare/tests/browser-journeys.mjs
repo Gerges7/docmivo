@@ -331,6 +331,7 @@ await check('PDF Info displays page count and uploaded document name',async()=>{
   await p.waitForFunction(()=>!!window.PDFLib && !!window.pdfjsLib,{timeout:30000});
   await p.locator('#fileInput').setInputFiles([{name:'docmivo-info-check.pdf',mimeType:'application/pdf',buffer:input}]);
   await p.locator('#runTool').click();
+  await p.locator('#infoBox .file-row').first().waitFor({state:'visible',timeout:30000});
   const info=await p.locator('#infoBox').innerText();
   assert.match(info,/docmivo-info-check\.pdf/);
   assert.match(info,/pages\s*3/i);
@@ -348,6 +349,27 @@ await check('Remove Metadata clears document info fields but preserves pages',as
  assert.equal(result.getTitle()||'','');
  assert.equal(result.getAuthor()||'','');
  assert.equal(result.getSubject()||'','');
+});
+
+await check('Theme preferences persist and EN FR ES navigation stays usable',async()=>{
+ const p=await pageAt('/');
+ try{
+  const select=p.locator('.dm-language'),theme=p.locator('.dm-theme-button');
+  await select.waitFor({state:'visible',timeout:15000});
+  await select.selectOption('en');
+  assert.equal(await p.locator('html').getAttribute('lang'),'en');
+  assert.match(await p.locator('.nav-links a[href="/#tools"]').first().innerText(),/Tools/);
+  await theme.click();
+  assert.equal(await p.locator('html').getAttribute('data-theme'),'dark');
+  await p.reload();
+  await p.locator('.dm-language').waitFor({state:'visible',timeout:15000});
+  assert.equal(await p.locator('.dm-language').inputValue(),'en');
+  assert.equal(await p.locator('html').getAttribute('data-theme'),'dark');
+  await p.locator('.dm-language').selectOption('fr');
+  assert.match(await p.locator('.nav-links a[href="/#tools"]').first().innerText(),/Outils/);
+  await p.locator('.dm-language').selectOption('es');
+  assert.match(await p.locator('.nav-links a[href="/#tools"]').first().innerText(),/Herramientas/);
+ } finally{await p.close();}
 });
 
 await browser.close();
