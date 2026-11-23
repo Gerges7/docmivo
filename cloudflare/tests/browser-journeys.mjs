@@ -330,6 +330,8 @@ await check('PDF Info displays page count and uploaded document name',async()=>{
  try {
   await p.waitForFunction(()=>!!window.PDFLib && !!window.pdfjsLib,{timeout:30000});
   await p.locator('#fileInput').setInputFiles([{name:'docmivo-info-check.pdf',mimeType:'application/pdf',buffer:input}]);
+  assert.equal(await p.locator('meta[name="robots"]').count(),0);
+  assert.match(await p.locator('main').innerText(),/لا تنشئ ملفًا جديدًا للتنزيل/);
   await p.locator('#runTool').click();
   await p.locator('#infoBox .file-row').first().waitFor({state:'visible',timeout:30000});
   const info=await p.locator('#infoBox').innerText();
