@@ -157,7 +157,7 @@ await check('PDF to JPG returns genuine JPEGs in a ZIP',async()=>{
  const input=await makePdf([330,510]);
  const {data}=await toolDownload('/tools/pdf-to-jpg',[{name:'two.pdf',mimeType:'application/pdf',buffer:input}],'#scale','1');
  const zip=await JSZip.loadAsync(data);
- const names=Object.keys(zip.files).filter(n=>/\\.jpe?g$/i.test(n));
+ const names=Object.keys(zip.files).filter(n=>/\.jpe?g$/i.test(n));
  assert.equal(names.length,2);
  for(const n of names){
   const b=Buffer.from(await zip.file(n).async('uint8array'));
