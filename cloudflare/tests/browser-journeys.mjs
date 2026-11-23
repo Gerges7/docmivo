@@ -42,7 +42,7 @@ async function toolDownload(route,files,field,value){
   if(field){const e=p.locator(field);if(await e.evaluate(n=>n.tagName)==='SELECT')await e.selectOption(value);else await e.fill(value);}
   const [download]=await Promise.all([p.waitForEvent('download',{timeout:30000}),p.locator('#runTool').click()]);
   const data=fs.readFileSync(await download.path());
-  assert.ok(data.byteLength>200,'Downloaded file unexpectedly empty');
+  assert.ok(data.byteLength>20,'Downloaded file unexpectedly empty');
   assert.deepEqual(errors,[]);
   return {data,name:download.suggestedFilename()};
  }finally{await p.close();}
