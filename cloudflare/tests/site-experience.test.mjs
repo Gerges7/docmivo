@@ -16,3 +16,18 @@ test('Short Arabic guide titles retain DocMivo branding',()=>{
   const out=enhanceHtml(fixture,'guides/pdf-privacy-guide.html');
   assert.match(out,/<title>خصوصية PDF: إزالة البيانات المخفية \| DocMivo<\/title>/);
 });
+
+test('Verified PDF Info replaces inaccurate download instructions and removes noindex',()=>{
+ const fixture='<!doctype html><html lang="ar" dir="rtl"><head><meta content="noindex,follow" name="robots"/></head><body data-tool="pdf-info"><main>'+
+ '<section class="content-block"><h2>كيفية استخدام أداة معلومات PDF</h2><p>Old generic download steps</p></section>'+
+ '<section class="content-block v5-seo"><h2>متى تكون أداة معلومات PDF مفيدة؟</h2><p>Use cases</p></section>'+
+ '<section class="content-block v5-seo"><h2>الخصوصية وطريقة المعالجة</h2><p>Local</p></section>'+
+ '</main></body></html>';
+ const html=enhanceHtml(fixture,'tools/pdf-info/index.html');
+ assert.doesNotMatch(html,/noindex/);
+ assert.match(html,/تعرض النتائج ولا تنشئ ملفًا جديدًا للتنزيل/);
+ assert.match(html,/title/);
+ assert.match(html,/حدود الفحص وخصوصية الملف/);
+ assert.doesNotMatch(html,/Old generic download steps/);
+ assert.throws(()=>enhanceHtml(fixture.replace('noindex,follow','index,follow'),'tools/pdf-info/index.html'),/must begin in noindex QA state/);
+});
