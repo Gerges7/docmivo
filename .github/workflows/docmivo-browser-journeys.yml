@@ -1,0 +1,60 @@
+name: DocMivo Browser Journeys
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'cloudflare/**'
+      - 'assets/**'
+      - 'tools/**'
+      - '.github/workflows/docmivo-browser-journeys.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'cloudflare/**'
+      - 'assets/**'
+      - 'tools/**'
+      - '.github/workflows/docmivo-browser-journeys.yml'
+permissions:
+  contents: read
+jobs:
+  chromium-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: cloudflare
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install project dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build same distribution as production
+        run: npm run build
+      - name: Install browser QA dependencies
+        run: npm install --no-save --no-audit --no-fund playwright@1.57.0 pdf-lib@1.17.1 jszip@3.10.1
+      - name: Install Chromium browser
+        run: npx playwright install --with-deps chromium
+      - name: Start local Cloudflare Worker
+        run: |
+          (npx wrangler dev --local --ip 127.0.0.1 --port 8787 > worker-qa.log 2>&1) &
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:8787/api/health >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat worker-qa.log
+          exit 1
+      - name: Test browser flows and inspect all tool routes
+        env:
+          DOCMIVO_BASE: http://127.0.0.1:8787
+        run: node tests/browser-journeys.mjs
+      - name: Upload screenshots and local Worker log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docmivo-browser-qa
+          path: |
+            cloudflare/qa-artifacts/*.png
+            cloudflare/worker-qa.log
+          retention-days: 7
