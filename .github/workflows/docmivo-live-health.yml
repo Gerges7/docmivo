@@ -21,11 +21,24 @@ jobs:
           BASE='https://getdocmivo.com'
           work="$(mktemp -d)"
           fetch() {
-            local route="$1" file="$2"
-            curl --fail --silent --show-error --location --retry 2 --max-time 25 \
+            local route="$1" file="$2" code
+            code="$(curl --silent --show-error --location --retry 1 --max-time 25 \
+                 --dump-header "$work/headers" --write-out '%{http_code}' \
                  -H 'User-Agent: DocMivo-GitHub-Healthcheck/1.0' \
-                 "$BASE$route" -o "$work/$file"
-            test -s "$work/$file"
+                 "$BASE$route" -o "$work/$file" || true)"
+            echo "GET $route -> HTTP $code"
+            if [[ "$code" != "200" ]] || [[ ! -s "$work/$file" ]]; then
+              echo 'Response headers (diagnostic):'
+              grep -Ei '^(HTTP/|server:|cf-ray:|cf-mitigated:|content-type:|location:|x-robots-tag:)' "$work/headers" || true
+              echo 'First 200 response bytes:'
+              head -c 200 "$work/$file" || true
+              echo
+              for agent in 'Mozilla/5.0 (compatible; DocMivoQA/1.0)' 'Googlebot'; do
+                probe="$(curl --silent --show-error --location --max-time 15 --output /dev/null --write-out '%{http_code}' -H "User-Agent: $agent" "$BASE$route" || true)"
+                echo "Diagnostic with alternate User-Agent $agent -> HTTP $probe"
+              done
+              return 1
+            fi
           }
           fetch '/' home.html
           fetch '/api/health' health.json
