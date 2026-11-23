@@ -39,7 +39,7 @@ async function toolDownload(route,files,field,value){
  try{
   await p.waitForFunction(()=>!!window.PDFLib && !!window.pdfjsLib && !!window.JSZip,{timeout:30000});
   await p.locator('#fileInput').setInputFiles(files);
-  if(field)await p.locator(field).fill(value);
+  if(field){const e=p.locator(field);if(await e.evaluate(n=>n.tagName)==='SELECT')await e.selectOption(value);else await e.fill(value);}
   const [download]=await Promise.all([p.waitForEvent('download',{timeout:30000}),p.locator('#runTool').click()]);
   const data=fs.readFileSync(await download.path());
   assert.ok(data.byteLength>200,'Downloaded file unexpectedly empty');
@@ -122,6 +122,68 @@ await check('Reorder PDF changes page sequence without losing pages',async()=>{
  assert.equal(Math.round(d.getPage(0).getWidth()),510);
  assert.equal(Math.round(d.getPage(1).getWidth()),330);
 });
+
+await check('Rotate all PDF pages 90 degrees',async()=>{
+ const input=await makePdf([330,510]);
+ const {data}=await toolDownload('/tools/rotate-pdf',[{name:'two.pdf',mimeType:'application/pdf',buffer:input}],'#rotation','90');
+ const d=await PDFDocument.load(data);assert.equal(d.getPageCount(),2);
+ assert.equal(d.getPage(0).getRotation().angle,90);
+ assert.equal(d.getPage(1).getRotation().angle,90);
+});
+await check('Delete page 2 preserves original page 1',async()=>{
+ const input=await makePdf([330,510]);
+ const {data}=await toolDownload('/tools/delete-pages',[{name:'two.pdf',mimeType:'application/pdf',buffer:input}],'#pageRanges','2');
+ const d=await PDFDocument.load(data);
+ assert.equal(d.getPageCount(),1);assert.equal(Math.round(d.getPage(0).getWidth()),330);
+});
+await check('Extract page 2 preserves correct source page',async()=>{
+ const input=await makePdf([330,510]);
+ const {data}=await toolDownload('/tools/extract-pages',[{name:'two.pdf',mimeType:'application/pdf',buffer:input}],'#pageRanges','2');
+ const d=await PDFDocument.load(data);
+ assert.equal(d.getPageCount(),1);assert.equal(Math.round(d.getPage(0).getWidth()),510);
+});
+await check('PDF to PNG returns actual PNGs in a ZIP',async()=>{
+ const input=await makePdf([330,510]);
+ const {data}=await toolDownload('/tools/pdf-to-png',[{name:'two.pdf',mimeType:'application/pdf',buffer:input}],'#scale','1');
+ const zip=await JSZip.loadAsync(data);
+ const names=Object.keys(zip.files).filter(n=>n.endsWith('.png'));
+ assert.equal(names.length,2);
+ for(const n of names){
+  const b=Buffer.from(await zip.file(n).async('uint8array'));
+  assert.equal(b.subarray(1,4).toString(),'PNG');
+ }
+});
+await check('PDF to JPG returns genuine JPEGs in a ZIP',async()=>{
+ const input=await makePdf([330,510]);
+ const {data}=await toolDownload('/tools/pdf-to-jpg',[{name:'two.pdf',mimeType:'application/pdf',buffer:input}],'#scale','1');
+ const zip=await JSZip.loadAsync(data);
+ const names=Object.keys(zip.files).filter(n=>/\\.jpe?g$/i.test(n));
+ assert.equal(names.length,2);
+ for(const n of names){
+  const b=Buffer.from(await zip.file(n).async('uint8array'));
+  assert.equal(b[0],255);assert.equal(b[1],216);assert.equal(b[2],255);
+ }
+});
+await check('Image Resize preserves aspect ratio and PNG dimensions',async()=>{
+ const p=await pageAt('/tools/image-resize');
+ try{
+  const base64=await p.evaluate(()=>{
+   const c=document.createElement('canvas');c.width=120;c.height=60;
+   const g=c.getContext('2d');g.fillStyle='#29415c';g.fillRect(0,0,120,60);
+   return c.toDataURL('image/png').split(',')[1];
+  });
+  await p.locator('#imageInput').setInputFiles([{name:'qa.png',mimeType:'image/png',buffer:Buffer.from(base64,'base64')}]);
+  await p.waitForFunction(()=>document.getElementById('imgWidth').value==='120');
+  await p.locator('#imgWidth').fill('600');
+  await p.waitForFunction(()=>document.getElementById('imgHeight').value==='300');
+  await p.locator('#imgFormat').selectOption('image/png');
+  const [download]=await Promise.all([p.waitForEvent('download'),p.locator('#imageRun').click()]);
+  const b=fs.readFileSync(await download.path());
+  assert.equal(b.subarray(1,4).toString(),'PNG');
+  assert.equal(b.readUInt32BE(16),600);assert.equal(b.readUInt32BE(20),300);
+ }finally{await p.close();}
+});
+
 await check('Paused converter page is explicitly unavailable and noindex',async()=>{
  const p=await pageAt('/tools/word-to-pdf');
  try{
