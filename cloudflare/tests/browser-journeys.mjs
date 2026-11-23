@@ -290,6 +290,39 @@ await check('All published tool routes render usable or intentionally paused pag
   console.log('QA inspected '+slugs.length+' tool routes');
  }finally{await p.close();}
 });
+
+await check('Reverse Pages preserves all source pages in reverse order',async()=>{
+ const input=await makePdf([330,510,650]);
+ const {data}=await toolDownload('/tools/reverse-pages',[{name:'three.pdf',mimeType:'application/pdf',buffer:input}]);
+ const doc=await PDFDocument.load(data);
+ assert.equal(doc.getPageCount(),3);
+ assert.deepEqual(doc.getPages().map(p=>Math.round(p.getWidth())),[650,510,330]);
+});
+await check('Duplicate Pages repeats only the selected page',async()=>{
+ const input=await makePdf([330,510,650]);
+ const {data}=await toolDownload('/tools/duplicate-pages',[{name:'three.pdf',mimeType:'application/pdf',buffer:input}],'#pageRanges','2');
+ const doc=await PDFDocument.load(data);
+ assert.equal(doc.getPageCount(),4);
+ assert.deepEqual(doc.getPages().map(p=>Math.round(p.getWidth())),[330,510,510,650]);
+});
+await check('Edit Metadata saves title, author and subject',async()=>{
+ const input=await makePdf([330,510]);
+ const p=await pageAt('/tools/edit-metadata');
+ try {
+  await p.waitForFunction(()=>!!window.PDFLib && !!window.pdfjsLib,{timeout:30000});
+  await p.locator('#fileInput').setInputFiles([{name:'meta.pdf',mimeType:'application/pdf',buffer:input}]);
+  await p.locator('#metaTitle').fill('DocMivo QA Metadata');
+  await p.locator('#metaAuthor').fill('DocMivo Test');
+  await p.locator('#metaSubject').fill('Browser regression');
+  const [dl]=await Promise.all([p.waitForEvent('download',{timeout:30000}),p.locator('#runTool').click()]);
+  const result=await PDFDocument.load(fs.readFileSync(await dl.path()));
+  assert.equal(result.getPageCount(),2);
+  assert.equal(result.getTitle(),'DocMivo QA Metadata');
+  assert.equal(result.getAuthor(),'DocMivo Test');
+  assert.equal(result.getSubject(),'Browser regression');
+ } finally {await p.close();}
+});
+
 await browser.close();
 console.log('BROWSER QA RESULT '+passed+' passed, '+failed+' failed');
 if(failed)process.exit(1);
