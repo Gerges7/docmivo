@@ -1,0 +1,53 @@
+name: DocMivo Daily Live Health
+on:
+  schedule:
+    - cron: '5 7 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/docmivo-live-health.yml'
+permissions:
+  contents: read
+jobs:
+  live-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check site, API, sitemap, ads.txt and core routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://getdocmivo.com'
+          work="$(mktemp -d)"
+          fetch() {
+            local route="$1" file="$2"
+            curl --fail --silent --show-error --location --retry 2 --max-time 25 \
+                 -H 'User-Agent: DocMivo-GitHub-Healthcheck/1.0' \
+                 "$BASE$route" -o "$work/$file"
+            test -s "$work/$file"
+          }
+          fetch '/' home.html
+          fetch '/api/health' health.json
+          fetch '/sitemap.xml' sitemap.xml
+          fetch '/ads.txt' ads.txt
+          fetch '/robots.txt' robots.txt
+          fetch '/tools/merge-pdf' merge.html
+          fetch '/tools/qr-code' qr.html
+          fetch '/tools/word-to-pdf' paused.html
+          node -e "
+            const fs=require('fs');
+            const j=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));
+            if(j.ok!==true||j.service!=='docmivo-cloudflare')process.exit(1);
+            console.log('Cloudflare API healthy; converter='+j.converter+' ai='+j.ai);
+          " "$work/health.json"
+          grep -qi 'DocMivo' "$work/home.html"
+          grep -q 'https://getdocmivo.com/' "$work/sitemap.xml"
+          grep -q 'tools/qr-code' "$work/sitemap.xml"
+          ! grep -q '/tools/word-to-pdf</loc>' "$work/sitemap.xml"
+          grep -q 'google.com, pub-' "$work/ads.txt"
+          grep -q 'https://getdocmivo.com/sitemap.xml' "$work/robots.txt"
+          grep -qi 'noindex' "$work/paused.html"
+          grep -qi 'QR' "$work/qr.html"
+          grep -qi 'PDF' "$work/merge.html"
+          echo 'PASS: live site, API, ads.txt, indexability and two core tools'
