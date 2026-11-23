@@ -323,6 +323,33 @@ await check('Edit Metadata saves title, author and subject',async()=>{
  } finally {await p.close();}
 });
 
+
+await check('PDF Info displays page count and uploaded document name',async()=>{
+ const input=await makePdf([330,510,650]);
+ const p=await pageAt('/tools/pdf-info');
+ try {
+  await p.waitForFunction(()=>!!window.PDFLib && !!window.pdfjsLib,{timeout:30000});
+  await p.locator('#fileInput').setInputFiles([{name:'docmivo-info-check.pdf',mimeType:'application/pdf',buffer:input}]);
+  await p.locator('#runTool').click();
+  const info=await p.locator('#infoBox').innerText();
+  assert.match(info,/docmivo-info-check\.pdf/);
+  assert.match(info,/pages\s*3/i);
+ } finally {await p.close();}
+});
+await check('Remove Metadata clears document info fields but preserves pages',async()=>{
+ const source=await PDFDocument.load(await makePdf([330,510]));
+ source.setTitle('Private QA title');
+ source.setAuthor('Private QA author');
+ source.setSubject('Private QA subject');
+ const data=Buffer.from(await source.save());
+ const {data:output}=await toolDownload('/tools/remove-metadata',[{name:'private.pdf',mimeType:'application/pdf',buffer:data}]);
+ const result=await PDFDocument.load(output);
+ assert.equal(result.getPageCount(),2);
+ assert.equal(result.getTitle()||'','');
+ assert.equal(result.getAuthor()||'','');
+ assert.equal(result.getSubject()||'','');
+});
+
 await browser.close();
 console.log('BROWSER QA RESULT '+passed+' passed, '+failed+' failed');
 if(failed)process.exit(1);
