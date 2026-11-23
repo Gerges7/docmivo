@@ -358,6 +358,9 @@ await check('Theme preferences persist and EN FR ES navigation stays usable',asy
   await select.waitFor({state:'visible',timeout:15000});
   await select.selectOption('en');
   assert.equal(await p.locator('html').getAttribute('lang'),'en');
+  assert.equal(await p.locator('main').getAttribute('lang'),'ar');
+  assert.equal(await p.locator('main').getAttribute('dir'),'rtl');
+  assert.equal(await p.locator('.nav').getAttribute('dir'),'ltr');
   assert.match(await p.locator('.nav-links a[href="/#tools"]').first().innerText(),/Tools/);
   await theme.click();
   assert.equal(await p.locator('html').getAttribute('data-theme'),'dark');
