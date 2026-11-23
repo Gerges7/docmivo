@@ -1,0 +1,17 @@
+# Applied only when Cloudflare serves a static asset without invoking the Worker.
+# Keep the static resources' security headers when using selective Worker routing.
+/assets/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/favicon.svg
+  X-Content-Type-Options: nosniff
+
+/manifest.webmanifest
+  X-Content-Type-Options: nosniff
+
+# Canonical https://getdocmivo.com is indexable; the test workers.dev URL is not.
+https://:version.:subdomain.workers.dev/*
+  X-Robots-Tag: noindex, nofollow
