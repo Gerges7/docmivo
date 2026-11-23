@@ -1,0 +1,47 @@
+name: DocMivo Quality Gate
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cloudflare/**'
+      - 'assets/**'
+      - 'tools/**'
+      - '.github/workflows/docmivo-quality-gate.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'cloudflare/**'
+      - 'assets/**'
+      - 'tools/**'
+      - '.github/workflows/docmivo-quality-gate.yml'
+permissions:
+  contents: read
+jobs:
+  build-and-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Cloudflare build dependencies
+        working-directory: cloudflare
+        run: npm install --no-audit --no-fund
+      - name: Run regression suite
+        working-directory: cloudflare
+        run: npm test
+      - name: Assemble public site and verify static assets
+        working-directory: cloudflare
+        run: npm run build
+      - name: Check built output and accidental secret exposure
+        run: |
+          test -f cloudflare/dist/index.html
+          test -f cloudflare/dist/ads.txt
+          test -f cloudflare/dist/sitemap.xml
+          test -f cloudflare/dist/_headers
+          test ! -e cloudflare/dist/cloudrun
+          test ! -e cloudflare/dist/.env
+          test ! -e cloudflare/dist/api/converter_token.py
+          grep -q 'X-Robots-Tag: noindex' cloudflare/dist/_headers
+          grep -q 'google.com, pub-' cloudflare/dist/ads.txt
