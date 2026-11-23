@@ -83,6 +83,11 @@
     }
     root.lang=language;
     root.dir=language==='ar'?'rtl':'ltr';
+    // Article and tool guidance remains in Arabic; preserve correct bidi semantics.
+    const main=document.querySelector('main');
+    if(main){main.lang='ar';main.dir='rtl';}
+    const navigation=document.querySelector('.nav');
+    if(navigation){navigation.lang=language;navigation.dir=language==='ar'?'rtl':'ltr';}
     if(languageSelect){languageSelect.value=language;languageSelect.setAttribute('aria-label',labels[language].language);languageSelect.title=labels[language].language;}
     if(notice){notice.hidden=language==='ar';notice.textContent=labels[language].note;}
     setTheme(theme,false);
