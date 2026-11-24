@@ -43,6 +43,12 @@ jobs:
       - name: Run regression suite
         working-directory: cloudflare
         run: npm test
+      - name: Validate production QA script syntax
+        working-directory: cloudflare
+        run: |
+          node --check tests/production-public-site.mjs
+          node --check tests/wait-for-production-adsense.mjs
+          node --check tests/production-browser-probe.mjs
       - name: Assemble public site and verify static assets
         working-directory: cloudflare
         run: npm run build

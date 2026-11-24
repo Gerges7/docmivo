@@ -46,22 +46,56 @@ await check('Production health reports Cloudflare Worker',async()=>{
  assert.match(headers.get('content-type')||'',/application\/json/i);
  console.log('INFO: converter='+h.converter+'; AI='+h.ai);
 });
-await check('Public AdSense authorization and robots.txt',async()=>{
+await check('AdSense publisher identity, seller authorization and verified crawler access',async()=>{
  const ads=(await fetchText('/ads.txt')).body;
- assert.match(ads,/google\.com,\s*pub-\d+,\s*DIRECT,\s*f08c47fec0942fa0/i);
+ const record=ads.match(/^google\.com,\s*pub-(\d{10,24}),\s*DIRECT,\s*f08c47fec0942fa0\s*$/im);
+ assert.ok(record,'Missing valid direct Google seller record');
+ const home=(await fetchText('/')).body;
+ const accountTag=[...home.matchAll(/<meta\b[^>]*>/gi)].map(x=>x[0]).find(x=>/name=["']google-adsense-account["']/i.test(x));
+ const publisher=accountTag?.match(/content=["']ca-pub-(\d+)["']/i)?.[1];
+ assert.ok(publisher,'Missing AdSense ownership meta tag on homepage');
+ assert.equal(record[1],publisher,'ads.txt publisher ID does not match site verification ID');
+ assert.ok(home.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'AdSense verification script missing from homepage');
+ const activeTool=(await fetchText('/tools/qr-code')).body;
+ const activeImageTool=(await fetchText('/tools/image-resize')).body;
+ const activeGuide=(await fetchText('/guides/pdf-workflows')).body;
+ assert.ok(activeTool.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'QR tool page missing AdSense code');
+ assert.ok(activeImageTool.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Image resize page missing AdSense code');
+ assert.ok(activeGuide.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Monetized guide missing AdSense code');
  const robots=(await fetchText('/robots.txt')).body;
+ assert.match(robots,/User-agent:\s*Mediapartners-Google\s*\nAllow:\s*\//i,'AdSense ads crawler is not explicitly allowed');
+ assert.match(robots,/User-agent:\s*Google-Display-Ads-Bot\s*\nAllow:\s*\//i,'AdSense site verification crawler is not explicitly allowed');
  assert.match(robots,/https:\/\/getdocmivo\.com\/sitemap\.xml/i);
  assert.ok(!/^Disallow:\s*\/\s*$/m.test(robots),'robots.txt blocks entire site');
+ const privacy=(await fetchText('/privacy')).body;
+ const cookies=(await fetchText('/cookies')).body;
+ assert.match(privacy,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Privacy page must keep the Google consent interface');
+ assert.match(cookies,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Cookie settings page must keep the Google consent interface');
+ const contact=(await fetchText('/contact')).body;
+ assert.doesNotMatch(contact,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Contact page should not request ads');
+ for(const route of ['/terms','/guides/word-to-pdf-guide','/guides/searchable-ocr-guide','/guides/pdfa-guide','/guides/repair-pdf-guide','/guides/office-fonts-pdf-guide']){
+  const page=(await fetchText(route)).body;
+  assert.doesNotMatch(page,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Non-monetized page unexpectedly requests ads: '+route);
+ }
+ const noindex=(await fetchText('/tools/add-text-pdf')).body;
+ assert.match(noindex,/noindex/i);
+ assert.doesNotMatch(noindex,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Noindex beta tool should not request ads');
 });
 const sitemap=await fetchText('/sitemap.xml').then(r=>r.body).catch(e=>{failures.push({name:'Sitemap fetch',reason:e.message});return '';});
 const urls=[...sitemap.matchAll(/<loc>\s*([^<]+)\s*<\/loc>/gi)].map(x=>x[1].replace(/&amp;/g,'&'));
 await check('Sitemap is canonical, nonempty and excludes paused tools',async()=>{
  assert.match(sitemap,/<urlset\b/i);
- assert.ok(urls.length>=30,'Too few entries: '+urls.length);
+ assert.ok(urls.length>=46,'Too few curated indexable entries: '+urls.length);
  assert.equal(new Set(urls).size,urls.length,'Sitemap duplicate URL');
  for(const url of urls)assert.ok(url.startsWith(BASE+'/'),'Noncanonical sitemap host '+url);
  for(const paused of ['word-to-pdf','excel-to-pdf','protect-pdf','repair-pdf','searchable-ocr-pdf','pdfa-converter'])assert.ok(!urls.includes(BASE+'/tools/'+paused),'Paused tool indexed: '+paused);
- for(const required of ['/','/guides','/guides/pdf-workflows','/tools/merge-pdf','/tools/pdf-info'])assert.ok(urls.includes(BASE+required),'Missing important sitemap URL: '+required);
+ for(const required of ['/','/guides','/guides/pdf-workflows','/guides/qr-code-guide','/guides/image-optimization-guide','/tools/qr-code','/tools/image-resize'])assert.ok(urls.includes(BASE+required),'Missing important sitemap URL: '+required);
+ for(const required of ['/guides/qr-code-guide','/guides/image-optimization-guide','/guides/pdf-workflows','/about','/privacy','/cookies','/quality']){
+  const loc='<loc>'+BASE+required+'</loc>',at=sitemap.indexOf(loc);
+  assert.ok(at>=0,'Missing lastmod target '+required);
+  const a=sitemap.lastIndexOf('<url>',at),b=sitemap.indexOf('</url>',at)+6;
+  assert.match(sitemap.slice(a,b),/<lastmod>2026-11-24<\/lastmod>/,'Stale lastmod for '+required);
+ }
 });
 const targets=urls.filter(u=>u.startsWith(BASE+'/'));
 let cursor=0;const workers=Array.from({length:3},async()=>{
@@ -75,6 +109,23 @@ let cursor=0;const workers=Array.from({length:3},async()=>{
  }
 });
 await Promise.all(workers);
+await check('Only the two audited tool pages are indexable and monetized',async()=>{
+ const home=(await fetchText('/')).body;
+ const tag=[...home.matchAll(/<meta\b[^>]*>/gi)].map(x=>x[0]).find(x=>/name=["']google-adsense-account["']/i.test(x));
+ const publisher=tag?.match(/content=["']ca-pub-(\d+)["']/i)?.[1];
+ assert.ok(publisher,'Publisher ID unavailable for page-scope audit');
+ for(const route of ['/tools/qr-code','/tools/image-resize']){
+  const page=(await fetchText(route)).body;
+  assert.ok(!/name=["']robots["'][^>]*noindex/i.test(page),'Audited tool unexpectedly noindex: '+route);
+  assert.ok(page.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Audited tool missing AdSense code: '+route);
+ }
+ for(const route of ['/tools/merge-pdf','/tools/pdf-info','/tools/compress-pdf','/tools/sign-pdf','/tools/watermark-pdf']){
+  const page=(await fetchText(route)).body;
+  assert.match(page,/noindex/i,'Unverified tool should remain noindex: '+route);
+  assert.doesNotMatch(page,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Unverified tool should not load ads: '+route);
+  assert.ok(!urls.includes(BASE+route),'Unverified tool must not be in sitemap: '+route);
+ }
+});
 await check('Paused converter accurately warns users and remains noindex',async()=>{
  const {body}=await fetchText('/tools/word-to-pdf');
  assert.match(body,/noindex/i);
@@ -92,6 +143,14 @@ await check('New original PDF workflow guide and theme are deployed',async()=>{
  assert.match(home,/data-docmivo-experience/,'Global dark-mode boot missing');
  const guide=(await fetchText('/guides/pdf-workflows')).body;
  for(const id of ['too-large','wrong-order','scanned','privacy','format','office'])assert.ok(guide.includes('id="'+id+'"'),'Missing scenario '+id);
+ const hub=(await fetchText('/guides')).body;
+ assert.ok(hub.includes('href="/guides/qr-code-guide"'),'QR guide is missing from guide hub');
+ assert.ok(hub.includes('href="/guides/image-optimization-guide"'),'Image optimization guide is missing from guide hub');
+ for(const [route,marker] of [['/guides/qr-code-guide','data-editorial-wave3="qr-code"'],['/guides/image-optimization-guide','data-editorial-wave3="image-optimization"']]){
+  const page=(await fetchText(route)).body;
+  assert.ok(page.includes(marker),'Missing original content section: '+route);
+  assert.ok(!/name=["']robots["'][^>]*noindex/i.test(page),'New guide remains noindex: '+route);
+ }
 });
 const oks=measurements.filter(x=>x.status===200),sorted=oks.map(x=>x.ms).sort((a,b)=>a-b);
 console.log('PRODUCTION HTTP SUMMARY: '+JSON.stringify({pages:urls.length,requests:measurements.length,status200:oks.length,medianMs:sorted[Math.floor(sorted.length/2)]||0,p95Ms:sorted[Math.floor(sorted.length*.95)]||0,failures:failures.length}));

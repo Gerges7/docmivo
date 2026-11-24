@@ -550,6 +550,59 @@ await check('PDF to PowerPoint produces a valid PPTX ZIP with one image slide pe
  }finally{await p.close();}
 });
 
+await check('QR and image optimization guides are linked, indexable and usable on mobile',async()=>{
+ const hub=await pageAt('/guides',390);
+ try{
+  assert.ok(await hub.locator('a[href="/guides/qr-code-guide"]').count());
+  assert.ok(await hub.locator('a[href="/guides/image-optimization-guide"]').count());
+ }finally{await hub.close();}
+ for(const [route,marker] of [['/guides/qr-code-guide','data-editorial-wave3="qr-code"'],['/guides/image-optimization-guide','data-editorial-wave3="image-optimization"']]){
+  const p=await pageAt(route,390);
+  try{
+   assert.ok((await p.locator('h1').innerText()).length>12);
+   assert.ok(await p.locator('[data-editorial-wave3]').count());
+   assert.equal(await p.locator('meta[name="robots"][content*="noindex"]').count(),0);
+   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth),false,'Horizontal overflow on '+route);
+  }finally{await p.close();}
+ }
+});
+
+await check('OCR smart mode extracts embedded text from every PDF page to TXT',async()=>{
+ const input=await makePdf([330,510]);
+ const {data,name}=await toolDownload('/tools/ocr-pdf',[{name:'text-layer.pdf',mimeType:'application/pdf',buffer:input}],'#ocrStrategy','smart');
+ assert.equal(name,'ocr-text.txt');
+ const output=data.toString('utf8');
+ assert.match(output,/Page 1 \(embedded text\)/);
+ assert.match(output,/DOCMIVO PAGE 1/);
+ assert.match(output,/Page 2 \(embedded text\)/);
+ assert.match(output,/DOCMIVO PAGE 2/);
+});
+await check('OCR force mode recognizes a clear English scan and exports TXT',async()=>{
+ const p=await pageAt('/tools/ocr-pdf');
+ try{
+  await p.waitForFunction(()=>!!window.PDFLib&&!!window.pdfjsLib&&!!window.Tesseract?.createWorker,{timeout:45000});
+  const png=Buffer.from(await p.evaluate(()=>{
+   const canvas=document.createElement('canvas');canvas.width=1000;canvas.height=250;
+   const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,1000,250);
+   ctx.fillStyle='#000000';ctx.font='bold 64px Arial';ctx.fillText('DOCMIVO OCR TEST 12345',30,150);
+   return canvas.toDataURL('image/png').split(',')[1];
+  }),'base64');
+  const doc=await PDFDocument.create(),page=doc.addPage([595,842]),image=await doc.embedPng(png);
+  page.drawImage(image,{x:40,y:600,width:515,height:129});
+  const input=Buffer.from(await doc.save());
+  await p.locator('#fileInput').setInputFiles([{name:'scanned.pdf',mimeType:'application/pdf',buffer:input}]);
+  await p.locator('#ocrLang').selectOption('eng');
+  await p.locator('#ocrStrategy').selectOption('force');
+  await p.locator('#ocrDetail').selectOption('fast');
+  await p.locator('#ocrLayout').selectOption('line');
+  const [download]=await Promise.all([p.waitForEvent('download',{timeout:120000}),p.locator('#runTool').click()]);
+  assert.equal(download.suggestedFilename(),'ocr-text.txt');
+  const output=fs.readFileSync(await download.path()).toString('utf8').toUpperCase();
+  assert.match(output,/DOCMIVO/);
+  assert.match(output,/12345/);
+ }finally{await p.close();}
+});
+
 await browser.close();
 console.log('BROWSER QA RESULT '+passed+' passed, '+failed+' failed');
 if(failed)process.exit(1);

@@ -18,8 +18,19 @@ const titles={
   'pdf-privacy-guide':'خصوصية PDF: إزالة البيانات المخفية | DocMivo',
   'repair-pdf-guide':'إصلاح PDF التالف: الإمكانيات والحدود | DocMivo',
   'sign-pdf-guide':'توقيع PDF: الموضع وصورة التوقيع | DocMivo',
-  'word-to-pdf-guide':'Word إلى PDF: الحفاظ على الخطوط والجداول | DocMivo'
+  'word-to-pdf-guide':'Word إلى PDF: الحفاظ على الخطوط والجداول | DocMivo',
+  'qr-code-guide':'QR Code عملي: الروابط وWi-Fi وvCard | DocMivo',
+  'image-optimization-guide':'ضغط الصور وتغيير الأبعاد واختيار الصيغة | DocMivo'
 };
+const DEFERRED_UI_SCRIPTS=new Set(['config.v14.js','tools-data.v14.js','site.v14.js','tool-engine.v14.js']);
+export function deferUiScripts(html){
+  return String(html).replace(/<script\b[^>]*\bsrc\s*=\s*(["'])([^"']+)\1[^>]*>/gi,tag=>{
+    const src=tag.match(/\bsrc\s*=\s*(["'])([^"']+)\1/i)?.[2]||'';
+    const file=src.split(/[?#]/)[0].split('/').pop();
+    if(!DEFERRED_UI_SCRIPTS.has(file)||/\b(?:async|defer)\b/i.test(tag))return tag;
+    return tag.replace(/<script\b/i,'<script defer');
+  });
+}
 function pages(dir){const all=[];for(const entry of fs.readdirSync(dir,{withFileTypes:true})){
   if(entry.name.startsWith('.'))continue;
   const file=path.join(dir,entry.name);
@@ -64,7 +75,7 @@ export function enhanceHtml(html,relative){
   const boot='<script data-docmivo-experience>try{var t=localStorage.getItem("docmivo.theme")||"system";document.documentElement.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t==="dark"?"dark":"light"}catch(e){document.documentElement.dataset.theme="light"}</script>';
   out=out.replace(/<\/head>/i,boot+'<link rel="stylesheet" href="/assets/css/experience.css"></head>');
   out=out.replace(/<\/body>/i,'<script defer src="/assets/js/experience.js"></script></body>');
-  return out;
+  return deferUiScripts(out);
 }
 export function installExperience(dist){
   const css=path.join(dist,'assets/css/experience.css'),js=path.join(dist,'assets/js/experience.js');
@@ -81,7 +92,7 @@ export function installExperience(dist){
   const entry='<loc>https://getdocmivo.com/tools/pdf-info</loc>';
   if(!xml.includes(entry)){
     if(!xml.includes('</urlset>'))throw new Error('Cannot extend malformed sitemap');
-    fs.writeFileSync(sitemap,xml.replace('</urlset>','  <url>'+entry+'</url>\n</urlset>'));
+    fs.writeFileSync(sitemap,xml.replace('</urlset>','  <url>'+entry+'<lastmod>2026-11-24</lastmod></url>\n</urlset>'));
   }
   const styles=fs.readFileSync(css,'utf8');
   fs.appendFileSync(css,'\n.dm-dropzone-title{font-size:1.18rem;font-weight:800;margin:10px 0 4px}\n');

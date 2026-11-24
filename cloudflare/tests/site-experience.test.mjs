@@ -31,3 +31,26 @@ test('Verified PDF Info replaces inaccurate download instructions and removes no
  assert.doesNotMatch(html,/Old generic download steps/);
  assert.throws(()=>enhanceHtml(fixture.replace('noindex,follow','index,follow'),'tools/pdf-info/index.html'),/must begin in noindex QA state/);
 });
+
+test('defers local UI bootstrap and tool engine scripts without changing their order',()=>{
+ const scripts='<script src="assets/js/config.v14.js"></script>'+
+  '<script src="assets/js/tools-data.v14.js"></script>'+
+  '<script src="assets/js/site.v14.js"></script>'+
+  '<script src="assets/js/tool-engine.v14.js"></script>';
+ const input=fixture.replace('</body>',scripts+'</body>');
+ const out=enhanceHtml(input,'index.html');
+ for(const file of ['config.v14.js','tools-data.v14.js','site.v14.js','tool-engine.v14.js']){
+  assert.match(out,new RegExp('<script defer src="assets/js/'+file.replace(/\./g,'\\.')+'"><\\/script>'));
+ }
+ const positions=['config.v14.js','tools-data.v14.js','site.v14.js','tool-engine.v14.js'].map(x=>out.indexOf(x));
+ assert.deepEqual(positions,[...positions].sort((a,b)=>a-b));
+});
+
+test('leaves asynchronous Google tags, vendor libraries and inline bootstrap untouched',()=>{
+ const html='<!doctype html><html><head><title>x</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-TEST"></script><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><script src="assets/js/vendor/docmivo-qr-engine.js"></script><script>window.inlineBootstrap=true;</script></head><body></body></html>';
+ const out=enhanceHtml(html,'index.html');
+ assert.match(out,/<script async src="https:\/\/www\.googletagmanager/);
+ assert.match(out,/<script async src="https:\/\/pagead2\.googlesyndication/);
+ assert.match(out,/<script src="assets\/js\/vendor\/docmivo-qr-engine\.js"><\/script>/);
+ assert.match(out,/<script>window\.inlineBootstrap=true;<\/script>/);
+});
