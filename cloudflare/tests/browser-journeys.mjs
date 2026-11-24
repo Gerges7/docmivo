@@ -551,13 +551,13 @@ await check('PDF to PowerPoint produces a valid PPTX ZIP with one image slide pe
 });
 
 await check('QR and image optimization guides are linked, indexable and usable on mobile',async()=>{
- const hub=await pageAt('/guides');
+ const hub=await pageAt('/guides',390);
  try{
   assert.ok(await hub.locator('a[href="/guides/qr-code-guide"]').count());
   assert.ok(await hub.locator('a[href="/guides/image-optimization-guide"]').count());
  }finally{await hub.close();}
  for(const [route,marker] of [['/guides/qr-code-guide','data-editorial-wave3="qr-code"'],['/guides/image-optimization-guide','data-editorial-wave3="image-optimization"']]){
-  const p=await pageAt(route);
+  const p=await pageAt(route,390);
   try{
    assert.ok((await p.locator('h1').innerText()).length>12);
    assert.ok(await p.locator('[data-editorial-wave3]').count());
