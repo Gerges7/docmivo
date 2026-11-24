@@ -22,11 +22,11 @@ const cases=[
  ['guides/office-fonts-pdf-guide.html','office-fonts','غير مفعّلة حاليًا','<h2>قائمة مراجعة سريعة</h2>',false],
  ['guides/word-to-pdf-guide.html','word-to-pdf','غير مفعّلة حاليًا','<h2>قائمة مراجعة سريعة</h2>',false],
  ['guides/image-optimization-guide.html','image-optimization','32 مليون بكسل','<h2>قائمة المراجعة</h2>',true],
- ['guides/qr-code-guide.html','qr-code','مستوى تصحيح الأخطاء','</article>',true]
+ ['guides/qr-code-guide.html','qr-code','مستوى تصحيح الأخطاء','<a href="/tools/qr-code"',true]
 ];
 const page=(marker,noindex=false)=>{
  const meta=noindex?'<meta name="robots" content="noindex,follow">':'';
- const inside=marker==='</article>'?'<p>existing QR content</p>':marker;
+ const inside=marker==='<a href="/tools/qr-code"'?marker+'>Open</a>':marker;
  return '<html><head><title>Guide</title>'+meta+'</head><body><main><h1>Guide</h1><p>دليل DocMivo • مراجعة وتحديث 2026-10-12</p><article>'+inside+'</article></main></body></html>';
 };
 
