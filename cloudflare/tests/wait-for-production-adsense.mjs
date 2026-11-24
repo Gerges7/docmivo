@@ -11,7 +11,7 @@ const checks=[
  ['/',s=>/name=["']google-adsense-account["']/.test(s)&&s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher)],
  ['/contact',s=>!s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')],
  ['/tools/add-text-pdf',s=>/noindex/i.test(s)&&!s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')],
- ['/sitemap.xml',s=>(s.match(/<loc>/g)||[]).length>=46&&s.includes('<loc>https://getdocmivo.com/guides/qr-code-guide</loc>')&&s.includes('<loc>https://getdocmivo.com/guides/image-optimization-guide</loc>')&&s.includes('<loc>https://getdocmivo.com/tools/rotate-pdf</loc>')],
+ ['/sitemap.xml',s=>(s.match(/<loc>/g)||[]).length>=50&&s.includes('<loc>https://getdocmivo.com/guides/qr-code-guide</loc>')&&s.includes('<loc>https://getdocmivo.com/guides/image-optimization-guide</loc>')&&s.includes('<loc>https://getdocmivo.com/tools/rotate-pdf</loc>')],
  ['/guides',s=>s.includes('href="/guides/qr-code-guide"')&&s.includes('href="/guides/image-optimization-guide"')],
  ['/guides/qr-code-guide',s=>s.includes('data-editorial-wave3="qr-code"')&&!/name=["']robots["'][^>]*noindex/i.test(s)],
  ['/guides/image-optimization-guide',s=>s.includes('data-editorial-wave3="image-optimization"')&&!/name=["']robots["'][^>]*noindex/i.test(s)],
