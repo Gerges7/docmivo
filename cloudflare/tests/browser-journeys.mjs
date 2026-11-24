@@ -550,6 +550,23 @@ await check('PDF to PowerPoint produces a valid PPTX ZIP with one image slide pe
  }finally{await p.close();}
 });
 
+await check('QR and image optimization guides are linked, indexable and usable on mobile',async()=>{
+ const hub=await pageAt('/guides');
+ try{
+  assert.ok(await hub.locator('a[href="/guides/qr-code-guide"]').count());
+  assert.ok(await hub.locator('a[href="/guides/image-optimization-guide"]').count());
+ }finally{await hub.close();}
+ for(const [route,marker] of [['/guides/qr-code-guide','data-editorial-wave3="qr-code"'],['/guides/image-optimization-guide','data-editorial-wave3="image-optimization"']]){
+  const p=await pageAt(route);
+  try{
+   assert.ok((await p.locator('h1').innerText()).length>12);
+   assert.ok(await p.locator('[data-editorial-wave3]').count());
+   assert.equal(await p.locator('meta[name="robots"][content*="noindex"]').count(),0);
+   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth),false,'Horizontal overflow on '+route);
+  }finally{await p.close();}
+ }
+});
+
 await browser.close();
 console.log('BROWSER QA RESULT '+passed+' passed, '+failed+' failed');
 if(failed)process.exit(1);
