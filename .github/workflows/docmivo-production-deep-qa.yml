@@ -1,0 +1,71 @@
+name: DocMivo Production Deep QA
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 8 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'cloudflare/**'
+      - 'assets/**'
+      - 'tools/**'
+      - 'guides/**'
+      - '*.html'
+      - 'sitemap.xml'
+      - 'robots.txt'
+      - 'ads.txt'
+      - '.github/workflows/docmivo-production-deep-qa.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'cloudflare/tests/production-public-site.mjs'
+      - '.github/workflows/docmivo-production-deep-qa.yml'
+permissions:
+  contents: read
+jobs:
+  production-read-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: cloudflare
+    env:
+      DOCMIVO_BASE: https://getdocmivo.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test and Cloudflare build dependencies
+        run: npm install --no-audit --no-fund
+      - name: Validate production auditor syntax and generate expected route list
+        run: |
+          node --check tests/production-public-site.mjs
+          npm run build
+      - name: Check live health, every sitemap page, SEO integrity and AdSense files
+        run: |
+          set -o pipefail
+          node tests/production-public-site.mjs 2>&1 | tee production-public-audit.log
+      - name: Install browser QA dependencies
+        run: npm install --no-save --no-audit --no-fund playwright@1.57.0 pdf-lib@1.17.1 jszip@3.10.1
+      - name: Cache Playwright Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ubuntu-playwright-chromium-1.57.0
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Check real production tools, downloads, mobile layout and theme
+        run: |
+          set -o pipefail
+          node tests/browser-journeys.mjs 2>&1 | tee production-browser-qa.log
+      - name: Preserve audits and representative screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docmivo-production-deep-qa
+          path: |
+            cloudflare/production-public-audit.log
+            cloudflare/production-browser-qa.log
+            cloudflare/qa-artifacts/*.png
+          retention-days: 14
