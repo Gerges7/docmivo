@@ -7,60 +7,28 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/docmivo-live-health.yml'
+      - 'cloudflare/tests/production-public-site.mjs'
+      - 'robots.txt'
+      - 'ads.txt'
+      - 'sitemap.xml'
+      - 'index.html'
+      - 'about.html'
+      - 'quality.html'
+      - 'guides/**'
+      - 'tools/**'
 permissions:
   contents: read
 jobs:
   live-check:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
-      - name: Check site, API, sitemap, ads.txt and core routes
-        shell: bash
-        run: |
-          set -euo pipefail
-          BASE='https://getdocmivo.com'
-          work="$(mktemp -d)"
-          fetch() {
-            local route="$1" file="$2" code
-            code="$(curl --silent --show-error --location --retry 1 --max-time 25 \
-                 --dump-header "$work/headers" --write-out '%{http_code}' \
-                 -H 'User-Agent: DocMivo-GitHub-Healthcheck/1.0' \
-                 "$BASE$route" -o "$work/$file" || true)"
-            echo "GET $route -> HTTP $code"
-            if [[ "$code" != "200" ]] || [[ ! -s "$work/$file" ]]; then
-              echo 'Response headers (diagnostic):'
-              grep -Ei '^(HTTP/|server:|cf-ray:|cf-mitigated:|content-type:|location:|x-robots-tag:)' "$work/headers" || true
-              echo 'First 200 response bytes:'
-              head -c 200 "$work/$file" || true
-              echo
-              for agent in 'Mozilla/5.0 (compatible; DocMivoQA/1.0)' 'Googlebot'; do
-                probe="$(curl --silent --show-error --location --max-time 15 --output /dev/null --write-out '%{http_code}' -H "User-Agent: $agent" "$BASE$route" || true)"
-                echo "Diagnostic with alternate User-Agent $agent -> HTTP $probe"
-              done
-              return 1
-            fi
-          }
-          fetch '/' home.html
-          fetch '/api/health' health.json
-          fetch '/sitemap.xml' sitemap.xml
-          fetch '/ads.txt' ads.txt
-          fetch '/robots.txt' robots.txt
-          fetch '/tools/merge-pdf' merge.html
-          fetch '/tools/qr-code' qr.html
-          fetch '/tools/word-to-pdf' paused.html
-          node -e "
-            const fs=require('fs');
-            const j=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));
-            if(j.ok!==true||j.service!=='docmivo-cloudflare')process.exit(1);
-            console.log('Cloudflare API healthy; converter='+j.converter+' ai='+j.ai);
-          " "$work/health.json"
-          grep -qi 'DocMivo' "$work/home.html"
-          grep -q 'https://getdocmivo.com/' "$work/sitemap.xml"
-          grep -q 'tools/qr-code' "$work/sitemap.xml"
-          ! grep -q '/tools/word-to-pdf</loc>' "$work/sitemap.xml"
-          grep -q 'google.com, pub-' "$work/ads.txt"
-          grep -q 'https://getdocmivo.com/sitemap.xml' "$work/robots.txt"
-          grep -qi 'noindex' "$work/paused.html"
-          grep -qi 'QR' "$work/qr.html"
-          grep -qi 'PDF' "$work/merge.html"
-          echo 'PASS: live site, API, ads.txt, indexability and two core tools'
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check production health, all sitemap pages, AdSense access and SEO
+        working-directory: cloudflare
+        env:
+          DOCMIVO_BASE: https://getdocmivo.com
+        run: node tests/production-public-site.mjs
