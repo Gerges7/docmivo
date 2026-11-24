@@ -407,7 +407,7 @@ await check('Smart compression refuses to destroy text when size cannot be reduc
   await p.locator('#compressMode').selectOption('auto');
   let downloads=0;p.on('download',()=>downloads++);
   await p.locator('#runTool').click();
-  await p.waitForFunction(()=>document.getElementById('status')?.classList.contains('error'),{timeout:20000});
+  await p.waitForFunction(()=>document.getElementById('status')?.classList.contains('err'),{timeout:20000});
   const message=await p.locator('#status').innerText();
   assert.match(message,/يحتوي نصًا قابلًا للنسخ|لم تنجح إعادة تعبئته/);
   assert.equal(downloads,0,'Must not invent an improvement or silently rasterize searchable PDF');
