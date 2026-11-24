@@ -26,7 +26,9 @@ async function fetchText(route){
 function metadata(html,url){
  assert.match(html,/<html\b/i,'Missing HTML document');
  assert.match(html,/<title>[^<]{8,}<\/title>/i,'Missing meaningful title: '+url);
- assert.match(html,/<meta\b[^>]*\bname=["']description["'][^>]*\bcontent=["'][^"']{40,}["']/i,'Missing description: '+url);
+ const desc=[...html.matchAll(/<meta\b[^>]*>/gi)].map(m=>m[0]).find(tag=>/\bname=["']description["']/i.test(tag));
+ const description=desc?.match(/\bcontent=["']([^"']+)["']/i)?.[1]||'';
+ assert.ok(description.length>=40,'Missing meaningful description: '+url);
  assert.match(html,/<h1\b[^>]*>/i,'Missing H1: '+url);
  assert.ok(!/<meta\b(?=[^>]*\bname=["']robots["'])(?=[^>]*\bcontent=["'][^"']*noindex)/i.test(html),'Listed page contains noindex: '+url);
  const canonical=[...html.matchAll(/<link\b[^>]*>/gi)].map(m=>m[0]).find(x=>/\brel=["']canonical["']/i.test(x));
