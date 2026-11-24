@@ -53,7 +53,8 @@ test('claims about Word conversion and OCR can be corrected without touching unr
  const html='<h2>Word إلى PDF مثال واضح</h2><p>في تحويل Word لا نكتفي بأن النص ظهر. نقارن عدد الصفحات وأبعادها، حدود الجداول، التفاف الأسطر، موضع الصور، والـheaders. إذا كان الخط الأصلي غير متاح على خادم التحويل نستخدم بدائل متوافقة قدر الإمكان، ثم نرفض التعديل تلقائيًا إذا أدى إلى تغير كبير مثل زيادة عدد الصفحات أو التفاف غير طبيعي.</p>\n<h2>اختبارات PDF</h2><p>في الدمج والتقسيم نراجع عدد الصفحات وترتيبها. في الضغط نقارن الحجم مع وضوح أصغر نص. في OCR نختبر كلمات عربية وإنجليزية وأرقامًا داخل جداول. في الحماية وفتح الملفات نتحقق أن الملف الناتج يفتح أو يرفض الفتح بالطريقة المتوقعة، وليس فقط أن العملية انتهت دون خطأ.</p><p>other content</p>';
  const updated=improveQualityClaims(html);
  assert.match(updated,/خدمة متوقفة حاليًا/);
- assert.match(updated,/بعض الكلمات/);
+ assert.match(updated,/استخرج وضع Smart النص المضمّن من صفحتين/);
+ assert.match(updated,/عبارة اختبار إنجليزية في صورة ممسوحة/);
  assert.match(updated,/other content/);
  assert.doesNotMatch(updated,/ثم نرفض التعديل تلقائيًا/);
  assert.throws(()=>improveQualityClaims(updated));
