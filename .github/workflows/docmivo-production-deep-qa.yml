@@ -55,10 +55,17 @@ jobs:
           key: ubuntu-playwright-chromium-1.57.0
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      - name: Detect Cloudflare Chromium access without bypassing protection
+        id: chromium_access
+        run: node tests/production-browser-probe.mjs
       - name: Check real production tools, downloads, mobile layout and theme
+        if: steps.chromium_access.outputs.http_status == '200'
         run: |
           set -o pipefail
           node tests/browser-journeys.mjs 2>&1 | tee production-browser-qa.log
+      - name: Report production Chromium verification gap
+        if: steps.chromium_access.outputs.http_status != '200'
+        run: echo '::warning::Production Chromium E2E is blocked by Cloudflare or unavailable. This run only confirms the direct HTTP/SEO audit. Configure a narrowly scoped trusted QA path before claiming live browser E2E passed.'
       - name: Preserve audits and representative screenshots
         if: always()
         uses: actions/upload-artifact@v4
