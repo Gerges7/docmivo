@@ -9,7 +9,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const LEGAL_PAGES=new Set(['contact.html','terms.html','404.html']);
-const NON_MONETIZED_PREFIXES=['v17-preview/','tools/'];
+const NON_MONETIZED_PREFIXES=['v17-preview/'];
 const NON_MONETIZED_GUIDES=new Set([
  'guides/word-to-pdf-guide.html',
  'guides/searchable-ocr-guide.html',
