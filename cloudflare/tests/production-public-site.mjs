@@ -56,6 +56,10 @@ await check('AdSense publisher identity, seller authorization and verified crawl
  assert.ok(publisher,'Missing AdSense ownership meta tag on homepage');
  assert.equal(record[1],publisher,'ads.txt publisher ID does not match site verification ID');
  assert.ok(home.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'AdSense verification script missing from homepage');
+ const activeTool=(await fetchText('/tools/merge-pdf')).body;
+ const activeGuide=(await fetchText('/guides/pdf-workflows')).body;
+ assert.ok(activeTool.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Active tool page missing AdSense code');
+ assert.ok(activeGuide.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Monetized guide missing AdSense code');
  const robots=(await fetchText('/robots.txt')).body;
  assert.match(robots,/User-agent:\s*Mediapartners-Google\s*\nAllow:\s*\//i,'AdSense ads crawler is not explicitly allowed');
  assert.match(robots,/User-agent:\s*Google-Display-Ads-Bot\s*\nAllow:\s*\//i,'AdSense site verification crawler is not explicitly allowed');
