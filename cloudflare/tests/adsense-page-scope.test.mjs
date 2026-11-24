@@ -13,8 +13,8 @@ const page=(extra='')=>'<!doctype html><html><head>'+meta+tag+'<title>Test page<
 const make=()=>fs.mkdtempSync(path.join(os.tmpdir(),'docmivo-adsense-scope-'));
 const put=(root,rel,value)=>{const file=path.join(root,rel);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,value);return file;};
 
-test('keeps one matching AdSense verification tag on indexable content pages',()=>{
- const out=scopeAdSensePage(page(), 'tools/merge-pdf/index.html',publisher);
+test('keeps one matching AdSense verification tag on indexable editorial pages',()=>{
+ const out=scopeAdSensePage(page(), 'guides/merge-pdf-guide.html',publisher);
  assert.equal((out.match(/name="google-adsense-account"/g)||[]).length,1);
  assert.equal((out.match(/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/g)||[]).length,1);
  assert.doesNotMatch(out,/ads\.v14\.js/);
@@ -24,6 +24,8 @@ test('keeps one matching AdSense verification tag on indexable content pages',()
 
 test('strips ads from noindex, legal, paused and unavailable-tool pages',()=>{
  for(const [rel,html] of [
+  ['tools/merge-pdf/index.html',page()],
+  ['tools/compress-pdf/index.html',page()],
   ['tools/add-text-pdf/index.html',page().replace('</head>','<meta name="robots" content="noindex,follow"></head>')],
   ['tools/word-to-pdf/index.html',page().replace('</head>','<meta name="robots" content="noindex,follow"></head>')],
   ['terms.html',page()],
@@ -61,15 +63,16 @@ test('build scopes all HTML pages against robots status and a validated ads.txt 
   put(root,'guides/word-to-pdf-guide.html',page());
   const result=applyAdSensePageScope(root);
   assert.equal(result.publisherId,publisher);
-  assert.equal(result.eligible,5);
-  assert.equal(result.excluded,4);
+  assert.equal(result.eligible,4);
+  assert.equal(result.excluded,5);
   assert.match(fs.readFileSync(path.join(root,'index.html'),'utf8'),/google-adsense-account/);
   assert.doesNotMatch(fs.readFileSync(path.join(root,'terms.html'),'utf8'),/pagead2\.googlesyndication/);
+  assert.doesNotMatch(fs.readFileSync(path.join(root,'tools/merge-pdf/index.html'),'utf8'),/google-adsense-account|pagead2\.googlesyndication|ads\.v14\.js/);
   assert.match(fs.readFileSync(path.join(root,'privacy.html'),'utf8'),/pagead2\.googlesyndication/);
   assert.match(fs.readFileSync(path.join(root,'cookies.html'),'utf8'),/pagead2\.googlesyndication/);
   assert.doesNotMatch(fs.readFileSync(path.join(root,'tools/add-text-pdf/index.html'),'utf8'),/google-adsense-account/);
   const second=applyAdSensePageScope(root);
-  assert.equal(second.eligible,5);
+  assert.equal(second.eligible,4);
   assert.equal((fs.readFileSync(path.join(root,'index.html'),'utf8').match(/name="google-adsense-account"/g)||[]).length,1);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
