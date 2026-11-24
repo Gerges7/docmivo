@@ -28,7 +28,8 @@ test('strips ads from noindex, legal, paused and unavailable-tool pages',()=>{
   ['tools/word-to-pdf/index.html',page().replace('</head>','<meta name="robots" content="noindex,follow"></head>')],
   ['privacy.html',page()],
   ['contact.html',page()],
-  ['guides/word-to-pdf-guide.html',page()]
+  ['guides/word-to-pdf-guide.html',page()],
+  ['v17-preview/index.html',page()]
  ]){
   const out=scopeAdSensePage(html,rel,publisher);
   assert.doesNotMatch(out,/google-adsense-account|pagead2\.googlesyndication\.com|ads\.v14\.js/,rel);
