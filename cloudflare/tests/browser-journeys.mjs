@@ -10,7 +10,7 @@ const DIST=path.resolve('dist');
 const OUT=path.resolve('qa-artifacts');
 fs.mkdirSync(OUT,{recursive:true});
 let passed=0,failed=0;
-const browser=await chromium.launch({headless:true});
+const browser=await chromium.launch({headless:true,...(process.env.DOCMIVO_BROWSER_CHANNEL?{channel:process.env.DOCMIVO_BROWSER_CHANNEL}:{})});
 const context=await browser.newContext({acceptDownloads:true,viewport:{width:1280,height:800}});
 await context.route(/google-analytics\.com|googletagmanager\.com|googlesyndication\.com|doubleclick\.net/,r=>r.abort());
 async function check(name,fn){
@@ -394,6 +394,160 @@ await check('Theme preferences persist and EN FR ES navigation stays usable',asy
   await p.locator('.dm-language').selectOption('es');
   assert.match(await p.locator('.nav-links a[href="/#tools"]').first().innerText(),/Herramientas/);
  } finally{await p.close();}
+});
+
+
+// Additional document integrity checks: high-value tools previously only received route smoke tests.
+await check('Smart compression refuses to destroy text when size cannot be reduced',async()=>{
+ const input=await makePdf([330,510]);
+ const p=await pageAt('/tools/compress-pdf');
+ try{
+  await p.waitForFunction(()=>!!window.PDFLib&&!!window.pdfjsLib,{timeout:30000});
+  await p.locator('#fileInput').setInputFiles([{name:'searchable.pdf',mimeType:'application/pdf',buffer:input}]);
+  await p.locator('#compressMode').selectOption('auto');
+  let downloads=0;p.on('download',()=>downloads++);
+  await p.locator('#runTool').click();
+  await p.waitForFunction(()=>document.getElementById('status')?.classList.contains('err'),{timeout:20000});
+  const message=await p.locator('#status').innerText();
+  assert.match(message,/يحتوي نصًا قابلًا للنسخ|لم تنجح إعادة تعبئته/);
+  assert.equal(downloads,0,'Must not invent an improvement or silently rasterize searchable PDF');
+ }finally{await p.close();}
+});
+await check('Visual compression genuinely reduces image-only PDF while preserving page dimensions',async()=>{
+ const p=await pageAt('/tools/compress-pdf');
+ let png;
+ try{
+  png=Buffer.from(await p.evaluate(()=>{
+   const canvas=document.createElement('canvas');canvas.width=400;canvas.height=500;
+   const ctx=canvas.getContext('2d'),image=ctx.createImageData(400,500);
+   let seed=20261124;
+   for(let i=0;i<image.data.length;i+=4){
+    seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+    image.data[i]=seed&255;image.data[i+1]=(seed>>>8)&255;image.data[i+2]=(seed>>>16)&255;image.data[i+3]=255;
+   }
+   ctx.putImageData(image,0,0);
+   return canvas.toDataURL('image/png').split(',')[1];
+  }),'base64');
+ }finally{await p.close();}
+ const doc=await PDFDocument.create(),image=await doc.embedPng(png);
+ const page=doc.addPage([400,500]);page.drawImage(image,{x:0,y:0,width:400,height:500});
+ const input=Buffer.from(await doc.save());
+ const {data,name}=await toolDownload('/tools/compress-pdf',[{name:'scan.pdf',mimeType:'application/pdf',buffer:input}],'#scale','1');
+ assert.equal(name,'compressed.pdf');
+ assert.ok(data.length<input.length,'Compressed output must be smaller for noisy scan');
+ const output=await PDFDocument.load(data);
+ assert.equal(output.getPageCount(),1);
+ assert.ok(Math.abs(output.getPage(0).getWidth()-400)<2);
+});
+await check('Grayscale PDF returns valid pages instead of an empty or renamed image',async()=>{
+ const input=await makePdf([330,510]);
+ const {data,name}=await toolDownload('/tools/grayscale-pdf',[{name:'source.pdf',mimeType:'application/pdf',buffer:input}],'#scale','1');
+ assert.equal(name,'grayscale.pdf');
+ assert.equal((await PDFDocument.load(data)).getPageCount(),2);
+});
+await check('Crop PDF sets crop boxes without deleting any pages',async()=>{
+ const input=await makePdf([330,510]);
+ const {data,name}=await toolDownload('/tools/crop-pdf',[{name:'source.pdf',mimeType:'application/pdf',buffer:input}]);
+ assert.equal(name,'cropped.pdf');
+ const d=await PDFDocument.load(data);
+ assert.equal(d.getPageCount(),2);
+ const box=d.getPage(0).getCropBox();
+ assert.ok(box.x>0&&box.y>0&&box.width<330&&box.height<420);
+});
+await check('Resize PDF produces genuine A4 pages',async()=>{
+ const input=await makePdf([330,510]);
+ const {data}=await toolDownload('/tools/resize-pdf',[{name:'source.pdf',mimeType:'application/pdf',buffer:input}],'#pageSize','a4');
+ const d=await PDFDocument.load(data);
+ assert.equal(d.getPageCount(),2);
+ assert.ok(Math.abs(d.getPage(0).getWidth()-595.28)<2);
+ assert.ok(Math.abs(d.getPage(0).getHeight()-841.89)<2);
+});
+await check('Watermark PDF saves modified, openable multi-page document',async()=>{
+ const input=await makePdf([330,510]);
+ const {data,name}=await toolDownload('/tools/watermark-pdf',[{name:'source.pdf',mimeType:'application/pdf',buffer:input}],'#watermarkText','QA DRAFT');
+ assert.equal(name,'watermarked.pdf');
+ const d=await PDFDocument.load(data);
+ assert.equal(d.getPageCount(),2);
+ assert.ok(data.length>input.length,'No additional watermark graphic embedded');
+});
+await check('N-up and booklet build printable PDF page layouts',async()=>{
+ const input=await makePdf([330,510,380,580]);
+ for(const [route,field,value,expectedName] of [
+  ['/tools/n-up-pdf','#nup','2','n-up-2.pdf'],
+  ['/tools/booklet-pdf',null,null,'booklet.pdf']
+ ]){
+  const {data,name}=await toolDownload(route,[{name:'four.pdf',mimeType:'application/pdf',buffer:input}],field,value);
+  assert.equal(name,expectedName);
+  const doc=await PDFDocument.load(data);
+  assert.equal(doc.getPageCount(),2,'Two sheets expected from '+route);
+ }
+});
+await check('Mix PDF interleaves source page sequences correctly',async()=>{
+ const a=await makePdf([330,380]),b=await makePdf([510,570]);
+ const {data}=await toolDownload('/tools/mix-pdf',[
+  {name:'alpha.pdf',mimeType:'application/pdf',buffer:a},
+  {name:'beta.pdf',mimeType:'application/pdf',buffer:b}]);
+ const d=await PDFDocument.load(data);
+ assert.deepEqual(d.getPages().map(p=>Math.round(p.getWidth())),[330,510,380,570]);
+});
+await check('Bates numbering and headers/footers preserve input page counts',async()=>{
+ const input=await makePdf([330,510]);
+ const b=await toolDownload('/tools/bates-numbering',[{name:'sample.pdf',mimeType:'application/pdf',buffer:input}],'#prefix','QA-');
+ assert.equal(b.name,'bates-numbered.pdf');
+ assert.equal((await PDFDocument.load(b.data)).getPageCount(),2);
+ const h=await toolDownload('/tools/headers-footers',[{name:'sample.pdf',mimeType:'application/pdf',buffer:input}],'#headerText','Page {page} of {pages}');
+ assert.equal(h.name,'headers-footers.pdf');
+ assert.equal((await PDFDocument.load(h.data)).getPageCount(),2);
+});
+await check('Form inspector exports JSON and form filler preserves a text field value',async()=>{
+ const source=await PDFDocument.create();
+ const page=source.addPage([380,460]);
+ const field=source.getForm().createTextField('FullName');
+ field.addToPage(page,{x:35,y:310,width:200,height:32});
+ const input=Buffer.from(await source.save());
+ const files=[{name:'form.pdf',mimeType:'application/pdf',buffer:input}];
+ const inspected=await toolDownload('/tools/inspect-pdf-forms',files);
+ assert.equal(inspected.name,'pdf-form-fields.json');
+ const parsed=JSON.parse(inspected.data.toString('utf8'));
+ assert.ok(parsed.some(x=>x.name==='FullName'));
+ const filled=await toolDownload('/tools/fill-pdf-form',files,'#formData',JSON.stringify({FullName:'DocMivo QA'}));
+ assert.equal(filled.name,'form-filled.pdf');
+ const output=await PDFDocument.load(filled.data);
+ assert.equal(output.getForm().getTextField('FullName').getText(),'DocMivo QA');
+});
+await check('Image signature writes an actual embedded PNG into a PDF',async()=>{
+ const input=await makePdf([330,510]);
+ const p=await pageAt('/tools/sign-pdf');
+ try{
+  const image=Buffer.from(await p.evaluate(()=>{
+   const c=document.createElement('canvas');c.width=70;c.height=35;
+   const g=c.getContext('2d');g.fillStyle='#154ca7';g.fillRect(0,0,70,35);
+   return c.toDataURL('image/png').split(',')[1];
+  }),'base64');
+  await p.locator('#fileInput').setInputFiles([
+   {name:'form.pdf',mimeType:'application/pdf',buffer:input},
+   {name:'signature.png',mimeType:'image/png',buffer:image}
+  ]);
+  await p.locator('#targetPage').fill('2');
+  const [dl]=await Promise.all([p.waitForEvent('download',{timeout:30000}),p.locator('#runTool').click()]);
+  assert.equal(dl.suggestedFilename(),'signed.pdf');
+  const data=fs.readFileSync(await dl.path());
+  assert.equal((await PDFDocument.load(data)).getPageCount(),2);
+  assert.ok(data.length>input.length,'Signature image not embedded');
+ } finally {await p.close();}
+});
+await check('PDF to PowerPoint produces a valid PPTX ZIP with one image slide per page',async()=>{
+ const input=await makePdf([330,510]);
+ const p=await pageAt('/tools/pdf-to-powerpoint');
+ try{
+  await p.waitForFunction(()=>!!window.PptxGenJS&&!!window.pdfjsLib,{timeout:30000});
+  await p.locator('#fileInput').setInputFiles([{name:'slides.pdf',mimeType:'application/pdf',buffer:input}]);
+  const [dl]=await Promise.all([p.waitForEvent('download',{timeout:45000}),p.locator('#runTool').click()]);
+  assert.match(dl.suggestedFilename(),/\.pptx$/);
+  const zip=await JSZip.loadAsync(fs.readFileSync(await dl.path()));
+  const slides=Object.keys(zip.files).filter(x=>/^ppt\/slides\/slide\d+\.xml$/.test(x));
+  assert.equal(slides.length,2);
+ }finally{await p.close();}
 });
 
 await browser.close();

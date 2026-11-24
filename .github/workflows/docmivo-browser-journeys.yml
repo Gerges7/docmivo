@@ -32,6 +32,8 @@ jobs:
   chromium-smoke:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    env:
+      DOCMIVO_BROWSER_CHANNEL: chrome
     defaults:
       run:
         working-directory: cloudflare
@@ -46,14 +48,8 @@ jobs:
         run: npm run build
       - name: Install browser QA dependencies
         run: npm install --no-save --no-audit --no-fund playwright@1.57.0 pdf-lib@1.17.1 jszip@3.10.1
-      # Cache browser builds to avoid downloading hundreds of MB on every PR.
-      - name: Cache Playwright Chromium
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-chromium-1.57.0
-      - name: Install Chromium browser
-        run: npx playwright install --with-deps chromium
+      - name: Verify preinstalled Google Chrome
+        run: google-chrome --version
       - name: Start local Cloudflare Worker
         run: |
           (npx wrangler dev --local --ip 127.0.0.1 --port 8787 > worker-qa.log 2>&1) &
