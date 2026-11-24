@@ -108,7 +108,10 @@ test('only QA-verified Rotate may lose beta noindex and join sitemap',()=>{
  const xml='<urlset><url><loc>https://getdocmivo.com/</loc></url></urlset>';
  const next=includeVerifiedRotateInSitemap(xml);
  assert.match(next,/rotate-pdf/);
+ assert.match(next,/<lastmod>2026-11-24<\/lastmod>/);
  assert.equal(includeVerifiedRotateInSitemap(next),next);
+ const stale='<urlset><url><loc>'+VERIFIED_ROTATE_URL+'</loc><lastmod>2026-10-12</lastmod></url></urlset>';
+ assert.match(includeVerifiedRotateInSitemap(stale),/<lastmod>2026-11-24<\/lastmod>/);
  assert.throws(()=>includeVerifiedRotateInSitemap('<body/>'),/malformed/);
  assert.equal(VERIFIED_ROTATE_URL,'https://getdocmivo.com/tools/rotate-pdf');
 });
