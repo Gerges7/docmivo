@@ -6,6 +6,12 @@ on:
       - 'cloudflare/**'
       - 'assets/**'
       - 'tools/**'
+      - 'guides/**'
+      - '*.html'
+      - 'sitemap.xml'
+      - 'robots.txt'
+      - 'ads.txt'
+      - 'manifest.webmanifest'
       - '.github/workflows/docmivo-quality-gate.yml'
   pull_request:
     branches: [main]
@@ -13,6 +19,12 @@ on:
       - 'cloudflare/**'
       - 'assets/**'
       - 'tools/**'
+      - 'guides/**'
+      - '*.html'
+      - 'sitemap.xml'
+      - 'robots.txt'
+      - 'ads.txt'
+      - 'manifest.webmanifest'
       - '.github/workflows/docmivo-quality-gate.yml'
 permissions:
   contents: read
