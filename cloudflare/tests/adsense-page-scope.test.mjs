@@ -26,7 +26,7 @@ test('strips ads from noindex, legal, paused and unavailable-tool pages',()=>{
  for(const [rel,html] of [
   ['tools/add-text-pdf/index.html',page().replace('</head>','<meta name="robots" content="noindex,follow"></head>')],
   ['tools/word-to-pdf/index.html',page().replace('</head>','<meta name="robots" content="noindex,follow"></head>')],
-  ['privacy.html',page()],
+  ['terms.html',page()],
   ['contact.html',page()],
   ['guides/word-to-pdf-guide.html',page()],
   ['v17-preview/index.html',page()]
@@ -50,18 +50,19 @@ test('build scopes all HTML pages against robots status and a validated ads.txt 
   put(root,'guides/index.html',page());
   put(root,'tools/merge-pdf/index.html',page());
   put(root,'tools/add-text-pdf/index.html',page().replace('</head>','<meta name="robots" content="noindex,follow"></head>'));
-  put(root,'privacy.html',page());
+  put(root,'terms.html',page());
   put(root,'contact.html',page());
   put(root,'guides/word-to-pdf-guide.html',page());
   const result=applyAdSensePageScope(root);
   assert.equal(result.publisherId,publisher);
-  assert.equal(result.eligible,3);
-  assert.equal(result.excluded,4);
+  assert.equal(result.eligible,4);
+  assert.equal(result.excluded,3);
   assert.match(fs.readFileSync(path.join(root,'index.html'),'utf8'),/google-adsense-account/);
-  assert.doesNotMatch(fs.readFileSync(path.join(root,'privacy.html'),'utf8'),/pagead2\.googlesyndication/);
+  assert.doesNotMatch(fs.readFileSync(path.join(root,'terms.html'),'utf8'),/pagead2\.googlesyndication/);
+  assert.match(fs.readFileSync(path.join(root,'privacy.html'),'utf8'),/pagead2\.googlesyndication/);
   assert.doesNotMatch(fs.readFileSync(path.join(root,'tools/add-text-pdf/index.html'),'utf8'),/google-adsense-account/);
   const second=applyAdSensePageScope(root);
-  assert.equal(second.eligible,3);
+  assert.equal(second.eligible,4);
   assert.equal((fs.readFileSync(path.join(root,'index.html'),'utf8').match(/name="google-adsense-account"/g)||[]).length,1);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
