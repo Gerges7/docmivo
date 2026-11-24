@@ -71,6 +71,7 @@ test('build scopes all HTML pages against robots status and a validated ads.txt 
   assert.doesNotMatch(fs.readFileSync(path.join(root,'terms.html'),'utf8'),/pagead2\.googlesyndication/);
   assert.match(fs.readFileSync(path.join(root,'tools/qr-code/index.html'),'utf8'),/pagead2\.googlesyndication/);
   assert.match(fs.readFileSync(path.join(root,'tools/image-resize/index.html'),'utf8'),/pagead2\.googlesyndication/);
+  assert.match(fs.readFileSync(path.join(root,'tools/rotate-pdf/index.html'),'utf8'),/pagead2\.googlesyndication/);
   assert.match(fs.readFileSync(path.join(root,'privacy.html'),'utf8'),/pagead2\.googlesyndication/);
   assert.match(fs.readFileSync(path.join(root,'cookies.html'),'utf8'),/pagead2\.googlesyndication/);
   assert.doesNotMatch(fs.readFileSync(path.join(root,'tools/add-text-pdf/index.html'),'utf8'),/google-adsense-account/);
