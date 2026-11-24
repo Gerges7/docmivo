@@ -6,6 +6,12 @@ on:
       - 'cloudflare/**'
       - 'assets/**'
       - 'tools/**'
+      - 'guides/**'
+      - '*.html'
+      - 'sitemap.xml'
+      - 'robots.txt'
+      - 'ads.txt'
+      - 'manifest.webmanifest'
       - '.github/workflows/docmivo-browser-journeys.yml'
   push:
     branches: [main]
@@ -13,6 +19,12 @@ on:
       - 'cloudflare/**'
       - 'assets/**'
       - 'tools/**'
+      - 'guides/**'
+      - '*.html'
+      - 'sitemap.xml'
+      - 'robots.txt'
+      - 'ads.txt'
+      - 'manifest.webmanifest'
       - '.github/workflows/docmivo-browser-journeys.yml'
 permissions:
   contents: read
@@ -34,6 +46,12 @@ jobs:
         run: npm run build
       - name: Install browser QA dependencies
         run: npm install --no-save --no-audit --no-fund playwright@1.57.0 pdf-lib@1.17.1 jszip@3.10.1
+      # Cache browser builds to avoid downloading hundreds of MB on every PR.
+      - name: Cache Playwright Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-chromium-1.57.0
       - name: Install Chromium browser
         run: npx playwright install --with-deps chromium
       - name: Start local Cloudflare Worker
