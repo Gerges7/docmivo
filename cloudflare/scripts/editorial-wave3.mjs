@@ -99,7 +99,7 @@ export function enhanceGuide(html,relative){
  if(out.includes('data-editorial-wave3='))throw new Error('Editorial wave 3 already applied: '+relative);
  if(!out.includes(entry.marker))throw new Error('Editorial wave 3 marker changed: '+relative);
  out=out.replace(entry.marker,entry.section+entry.marker);
- out=out.replace('دليل DocMivo • مراجعة وتحديث 2026-10-12','دليل DocMivo • آخر تحديث 2026-11-24');
+ out=out.replace('دليل DocMivo • مراجعة وتحديث 2026-10-12','دليل DocMivo • آخر تحديث: 24 نوفمبر 2026');
  if(NEW_INDEXABLE_GUIDES.has(relative)){
   out=out.replace(/<meta\b(?=[^>]*\bname=["']robots["'])(?=[^>]*\bcontent=["'][^"']*\bnoindex\b)[^>]*>/i,'');
   if(!/آخر تحديث:\s*24 نوفمبر 2026/.test(out))out=out.replace(/(<h1\b[^>]*>[\s\S]*?<\/h1>)/i,'$1<p class="guide-updated">آخر تحديث: 24 نوفمبر 2026</p>');
