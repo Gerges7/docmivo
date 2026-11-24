@@ -41,7 +41,7 @@ export function applyAdSensePageScope(dist){
  if(js.includes('DOCMIVO_AD_ELIGIBLE_PATH'))throw new Error('AdSense page scope already applied');
  const anchor="const client=C.adsenseClient;";
  if(!js.includes(anchor))throw new Error('AdSense loader source changed');
- const guard="\n // DOCMIVO_AD_ELIGIBLE_PATH: keep Auto Ads away from tools, forms and legal pages.\n const p=window.location.pathname.replace(/\\\\/+$/,'')||'/';\n const eligible=p==='/'||p==='/guides'||p.startsWith('/guides/');\n if(!eligible)return;";
+ const guard="\n // DOCMIVO_AD_ELIGIBLE_PATH: keep Auto Ads away from tools, forms and legal pages.\n const p=window.location.pathname.replace(/\\/+$/,'')||'/';\n const eligible=p==='/'||p==='/guides'||p.startsWith('/guides/');\n if(!eligible)return;";
  changes.push([loader,js.replace(anchor,anchor+guard)]);
  for(const [file,content] of changes)fs.writeFileSync(file,content);
  console.log('DocMivo AdSense page scope:',JSON.stringify({eligiblePages:retained,excludedPages:excluded,removedLoaders:removed}));
