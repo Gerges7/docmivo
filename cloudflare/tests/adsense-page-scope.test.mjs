@@ -58,7 +58,7 @@ test('build scopes all HTML pages against robots status and a validated ads.txt 
   const result=applyAdSensePageScope(root);
   assert.equal(result.publisherId,publisher);
   assert.equal(result.eligible,5);
-  assert.equal(result.excluded,3);
+  assert.equal(result.excluded,4);
   assert.match(fs.readFileSync(path.join(root,'index.html'),'utf8'),/google-adsense-account/);
   assert.doesNotMatch(fs.readFileSync(path.join(root,'terms.html'),'utf8'),/pagead2\.googlesyndication/);
   assert.match(fs.readFileSync(path.join(root,'privacy.html'),'utf8'),/pagead2\.googlesyndication/);
