@@ -62,7 +62,11 @@ await check('AdSense publisher identity, seller authorization and verified crawl
  assert.match(robots,/https:\/\/getdocmivo\.com\/sitemap\.xml/i);
  assert.ok(!/^Disallow:\s*\/\s*$/m.test(robots),'robots.txt blocks entire site');
  const privacy=(await fetchText('/privacy')).body;
- assert.doesNotMatch(privacy,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Legal privacy page should not request ads');
+ const cookies=(await fetchText('/cookies')).body;
+ assert.match(privacy,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Privacy page must keep the Google consent interface');
+ assert.match(cookies,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Cookie settings page must keep the Google consent interface');
+ const contact=(await fetchText('/contact')).body;
+ assert.doesNotMatch(contact,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Contact page should not request ads');
  const noindex=(await fetchText('/tools/add-text-pdf')).body;
  assert.match(noindex,/noindex/i);
  assert.doesNotMatch(noindex,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Noindex beta tool should not request ads');
