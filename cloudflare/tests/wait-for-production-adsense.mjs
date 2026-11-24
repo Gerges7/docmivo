@@ -8,7 +8,7 @@ const checks=[
  ['/robots.txt',s=>/User-agent:\s*Mediapartners-Google\s*\nAllow:\s*\//i.test(s)&&/User-agent:\s*Google-Display-Ads-Bot\s*\nAllow:\s*\//i.test(s)],
  ['/ads.txt',s=>new RegExp('^google\\\\.com,\\\\s*pub-'+publisher+',\\\\s*DIRECT,\\\\s*f08c47fec0942fa0\\\\s*$','im').test(s)],
  ['/',s=>/name=["']google-adsense-account["']/.test(s)&&s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher)],
- ['/privacy',s=>!s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')],
+ ['/contact',s=>!s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')],
  ['/tools/add-text-pdf',s=>/noindex/i.test(s)&&!s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')]
 ];
 async function get(route){
