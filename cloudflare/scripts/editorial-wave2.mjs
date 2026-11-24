@@ -133,10 +133,18 @@ export function enableVerifiedRotateIndexing(html){
  return src;
 }
 export function includeVerifiedRotateInSitemap(xml){
- const s=String(xml);
+ let s=String(xml);
  if(!s.includes('</urlset>'))throw new Error('V19.1 malformed sitemap.xml');
- if(s.includes(`<loc>${VERIFIED_ROTATE_URL}</loc>`))return s;
- return s.replace('</urlset>',`  <url><loc>${VERIFIED_ROTATE_URL}</loc></url>\n</urlset>`);
+ const loc=`<loc>${VERIFIED_ROTATE_URL}</loc>`;
+ if(!s.includes(loc))s=s.replace('</urlset>',`  <url>${loc}<lastmod>2026-11-24</lastmod></url>\n</urlset>`);
+ else {
+  const at=s.indexOf(loc),start=s.lastIndexOf('<url>',at),end=s.indexOf('</url>',at)+6;
+  if(start<0||end<6)throw new Error('V19.1 malformed Rotate sitemap entry');
+  let block=s.slice(start,end);
+  block=/<lastmod>[^<]*<\\/lastmod>/.test(block)?block.replace(/<lastmod>[^<]*<\\/lastmod>/,'<lastmod>2026-11-24</lastmod>'):block.replace('</url>','<lastmod>2026-11-24</lastmod></url>');
+  s=s.slice(0,start)+block+s.slice(end);
+ }
+ return s;
 }
 
 export const WAVE2_CSS=`\n/* DocMivo V19.1 — tool-specific instructions and candid QA state */
