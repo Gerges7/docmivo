@@ -46,12 +46,26 @@ await check('Production health reports Cloudflare Worker',async()=>{
  assert.match(headers.get('content-type')||'',/application\/json/i);
  console.log('INFO: converter='+h.converter+'; AI='+h.ai);
 });
-await check('Public AdSense authorization and robots.txt',async()=>{
+await check('AdSense publisher identity, seller authorization and verified crawler access',async()=>{
  const ads=(await fetchText('/ads.txt')).body;
- assert.match(ads,/google\.com,\s*pub-\d+,\s*DIRECT,\s*f08c47fec0942fa0/i);
+ const record=ads.match(/^google\.com,\s*pub-(\d{10,24}),\s*DIRECT,\s*f08c47fec0942fa0\s*$/im);
+ assert.ok(record,'Missing valid direct Google seller record');
+ const home=(await fetchText('/')).body;
+ const accountTag=[...home.matchAll(/<meta\b[^>]*>/gi)].map(x=>x[0]).find(x=>/name=["']google-adsense-account["']/i.test(x));
+ const publisher=accountTag?.match(/content=["']ca-pub-(\d+)["']/i)?.[1];
+ assert.ok(publisher,'Missing AdSense ownership meta tag on homepage');
+ assert.equal(record[1],publisher,'ads.txt publisher ID does not match site verification ID');
+ assert.ok(home.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'AdSense verification script missing from homepage');
  const robots=(await fetchText('/robots.txt')).body;
+ assert.match(robots,/User-agent:\s*Mediapartners-Google\s*\nAllow:\s*\//i,'AdSense ads crawler is not explicitly allowed');
+ assert.match(robots,/User-agent:\s*Google-Display-Ads-Bot\s*\nAllow:\s*\//i,'AdSense site verification crawler is not explicitly allowed');
  assert.match(robots,/https:\/\/getdocmivo\.com\/sitemap\.xml/i);
  assert.ok(!/^Disallow:\s*\/\s*$/m.test(robots),'robots.txt blocks entire site');
+ const privacy=(await fetchText('/privacy')).body;
+ assert.doesNotMatch(privacy,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Legal privacy page should not request ads');
+ const noindex=(await fetchText('/tools/add-text-pdf')).body;
+ assert.match(noindex,/noindex/i);
+ assert.doesNotMatch(noindex,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Noindex beta tool should not request ads');
 });
 const sitemap=await fetchText('/sitemap.xml').then(r=>r.body).catch(e=>{failures.push({name:'Sitemap fetch',reason:e.message});return '';});
 const urls=[...sitemap.matchAll(/<loc>\s*([^<]+)\s*<\/loc>/gi)].map(x=>x[1].replace(/&amp;/g,'&'));
