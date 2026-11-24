@@ -51,7 +51,7 @@ export function scopeAdSensePage(html,rel,publisherId){
  if(!/<head\b[^>]*>/i.test(out))throw new Error('AdSense scope: missing head in '+rel);
  const meta='<meta name="google-adsense-account" content="ca-pub-'+publisherId+'"/>';
  const script='<script async crossorigin="anonymous" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisherId+'"></script>';
- out=out.replace(/<head\b[^>]*>/i,tag=>tag+meta+script);
+ out=out.replace(/<\/head>/i,meta+script+'</head>');
  return out;
 }
 export function applyAdSensePageScope(dist){
