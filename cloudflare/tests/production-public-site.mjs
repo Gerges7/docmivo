@@ -75,11 +75,17 @@ const sitemap=await fetchText('/sitemap.xml').then(r=>r.body).catch(e=>{failures
 const urls=[...sitemap.matchAll(/<loc>\s*([^<]+)\s*<\/loc>/gi)].map(x=>x[1].replace(/&amp;/g,'&'));
 await check('Sitemap is canonical, nonempty and excludes paused tools',async()=>{
  assert.match(sitemap,/<urlset\b/i);
- assert.ok(urls.length>=30,'Too few entries: '+urls.length);
+ assert.ok(urls.length>=50,'Too few curated entries: '+urls.length);
  assert.equal(new Set(urls).size,urls.length,'Sitemap duplicate URL');
  for(const url of urls)assert.ok(url.startsWith(BASE+'/'),'Noncanonical sitemap host '+url);
  for(const paused of ['word-to-pdf','excel-to-pdf','protect-pdf','repair-pdf','searchable-ocr-pdf','pdfa-converter'])assert.ok(!urls.includes(BASE+'/tools/'+paused),'Paused tool indexed: '+paused);
  for(const required of ['/','/guides','/guides/pdf-workflows','/guides/qr-code-guide','/guides/image-optimization-guide','/tools/merge-pdf','/tools/pdf-info'])assert.ok(urls.includes(BASE+required),'Missing important sitemap URL: '+required);
+ for(const required of ['/guides/qr-code-guide','/guides/image-optimization-guide','/guides/pdf-workflows','/about','/privacy','/cookies','/quality']){
+  const loc='<loc>'+BASE+required+'</loc>',at=sitemap.indexOf(loc);
+  assert.ok(at>=0,'Missing lastmod target '+required);
+  const a=sitemap.lastIndexOf('<url>',at),b=sitemap.indexOf('</url>',at)+6;
+  assert.match(sitemap.slice(a,b),/<lastmod>2026-11-24<\/lastmod>/,'Stale lastmod for '+required);
+ }
 });
 const targets=urls.filter(u=>u.startsWith(BASE+'/'));
 let cursor=0;const workers=Array.from({length:3},async()=>{
