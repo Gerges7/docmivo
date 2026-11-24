@@ -1,7 +1,7 @@
 /**
  * DocMivo V18.8: truthful, build-time SEO & indexability checks on Cloudflare dist.
  * - KEEP paused tools noindex; the script never re-enables their indexing.
- * - Mark only previously QA-tested QR and Resize tools indexable.
+ * - Re-enable QA-tested QR and Resize tools here; V19.1 separately enables verified Rotate PDF.
  * - Keep sitemap restricted to existing indexable pages on getdocmivo.com.
  * - Enable a documented OCR Tesseract parameter without fabricating missing spaces.
  * This executes AFTER V18.7's layout patch and does not modify original site files.
