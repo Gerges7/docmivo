@@ -31,6 +31,7 @@ jobs:
         working-directory: cloudflare
     env:
       DOCMIVO_BASE: https://getdocmivo.com
+      DOCMIVO_BROWSER_CHANNEL: chrome
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -48,13 +49,8 @@ jobs:
           node tests/production-public-site.mjs 2>&1 | tee production-public-audit.log
       - name: Install browser QA dependencies
         run: npm install --no-save --no-audit --no-fund playwright@1.57.0 pdf-lib@1.17.1 jszip@3.10.1
-      - name: Cache Playwright Chromium
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ubuntu-playwright-chromium-1.57.0
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Verify preinstalled Google Chrome
+        run: google-chrome --version
       - name: Detect Cloudflare Chromium access without bypassing protection
         id: chromium_access
         run: node tests/production-browser-probe.mjs
