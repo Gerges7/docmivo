@@ -10,7 +10,7 @@ const DIST=path.resolve('dist');
 const OUT=path.resolve('qa-artifacts');
 fs.mkdirSync(OUT,{recursive:true});
 let passed=0,failed=0;
-const browser=await chromium.launch({headless:true});
+const browser=await chromium.launch({headless:true,...(process.env.DOCMIVO_BROWSER_CHANNEL?{channel:process.env.DOCMIVO_BROWSER_CHANNEL}:{})});
 const context=await browser.newContext({acceptDownloads:true,viewport:{width:1280,height:800}});
 await context.route(/google-analytics\.com|googletagmanager\.com|googlesyndication\.com|doubleclick\.net/,r=>r.abort());
 async function check(name,fn){
