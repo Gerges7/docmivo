@@ -81,7 +81,7 @@ export function installExperience(dist){
   const entry='<loc>https://getdocmivo.com/tools/pdf-info</loc>';
   if(!xml.includes(entry)){
     if(!xml.includes('</urlset>'))throw new Error('Cannot extend malformed sitemap');
-    fs.writeFileSync(sitemap,xml.replace('</urlset>','  <url>'+entry+'</url>\n</urlset>'));
+    fs.writeFileSync(sitemap,xml.replace('</urlset>','  <url>'+entry+'<lastmod>2026-11-24</lastmod></url>\n</urlset>'));
   }
   const styles=fs.readFileSync(css,'utf8');
   fs.appendFileSync(css,'\n.dm-dropzone-title{font-size:1.18rem;font-weight:800;margin:10px 0 4px}\n');
