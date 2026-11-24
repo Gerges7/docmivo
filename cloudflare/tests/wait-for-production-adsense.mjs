@@ -11,10 +11,11 @@ const checks=[
  ['/',s=>/name=["']google-adsense-account["']/.test(s)&&s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher)],
  ['/contact',s=>!s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')],
  ['/tools/add-text-pdf',s=>/noindex/i.test(s)&&!s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')],
- ['/sitemap.xml',s=>(s.match(/<loc>/g)||[]).length>=46&&s.includes('<loc>https://getdocmivo.com/guides/qr-code-guide</loc>')&&s.includes('<loc>https://getdocmivo.com/guides/image-optimization-guide</loc>')],
+ ['/sitemap.xml',s=>(s.match(/<loc>/g)||[]).length>=46&&s.includes('<loc>https://getdocmivo.com/guides/qr-code-guide</loc>')&&s.includes('<loc>https://getdocmivo.com/guides/image-optimization-guide</loc>')&&s.includes('<loc>https://getdocmivo.com/tools/rotate-pdf</loc>')],
  ['/guides',s=>s.includes('href="/guides/qr-code-guide"')&&s.includes('href="/guides/image-optimization-guide"')],
  ['/guides/qr-code-guide',s=>s.includes('data-editorial-wave3="qr-code"')&&!/name=["']robots["'][^>]*noindex/i.test(s)],
- ['/guides/image-optimization-guide',s=>s.includes('data-editorial-wave3="image-optimization"')&&!/name=["']robots["'][^>]*noindex/i.test(s)]
+ ['/guides/image-optimization-guide',s=>s.includes('data-editorial-wave3="image-optimization"')&&!/name=["']robots["'][^>]*noindex/i.test(s)],
+ ['/tools/rotate-pdf',s=>!/<meta\b[^>]*name=["']robots["'][^>]*noindex/i.test(s)]
 ];
 async function get(route){
  const r=await fetch(BASE+route,{redirect:'follow',headers:{'User-Agent':'DocMivo-GitHub-Production-QA/1.0','Accept':'text/html,text/plain,*/*'},signal:AbortSignal.timeout(20000)});
