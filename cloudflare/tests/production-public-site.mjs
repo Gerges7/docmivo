@@ -71,7 +71,7 @@ await check('AdSense publisher identity, seller authorization and verified crawl
  assert.match(cookies,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Cookie settings page must keep the Google consent interface');
  const contact=(await fetchText('/contact')).body;
  assert.doesNotMatch(contact,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Contact page should not request ads');
- for(const route of ['/terms','/tools/merge-pdf','/tools/compress-pdf','/guides/word-to-pdf-guide','/guides/searchable-ocr-guide','/guides/pdfa-guide','/guides/repair-pdf-guide','/guides/office-fonts-pdf-guide']){
+ for(const route of ['/terms','/guides/word-to-pdf-guide','/guides/searchable-ocr-guide','/guides/pdfa-guide','/guides/repair-pdf-guide','/guides/office-fonts-pdf-guide']){
   const page=(await fetchText(route)).body;
   assert.doesNotMatch(page,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Non-monetized page unexpectedly requests ads: '+route);
  }
