@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 const BASE=(process.env.DOCMIVO_BASE||'https://getdocmivo.com').replace(/\/+$/,'');
-const failures=[],measurements=[];
+const failures=[],measurements=[],pageBodies=new Map();
 function check(name,fn){return Promise.resolve().then(fn).then(()=>console.log('PASS '+name)).catch(e=>{failures.push({name,reason:e.message});console.error('FAIL '+name+': '+e.message);});}
 async function fetchText(route){
  const url=route.startsWith('https://')?route:BASE+route;
@@ -13,7 +13,7 @@ async function fetchText(route){
   try{
    const start=Date.now();
    const r=await fetch(url,{headers:{'User-Agent':'DocMivo-GitHub-Production-QA/1.0','Accept':'text/html,application/json,text/plain,*/*'},redirect:'follow',signal:AbortSignal.timeout(30000)});
-   const body=await r.text();measurements.push({url,status:r.status,ms:Date.now()-start,bytes:body.length});
+   const body=await r.text();measurements.push({url,status:r.status,ms:Date.now()-start,bytes:body.length});pageBodies.set(url,body);
    if(r.status>=500||r.status===429){last=new Error('HTTP '+r.status);continue;}
    assert.equal(r.status,200,'HTTP '+r.status+' '+url);
    assert.ok(body.length>15,'Empty response '+url);
@@ -109,6 +109,16 @@ let cursor=0;const workers=Array.from({length:3},async()=>{
  }
 });
 await Promise.all(workers);
+await check('AdSense publisher code is present on exactly 43 eligible sitemap pages',async()=>{
+ const adUrls=targets.filter(url=>pageBodies.get(url)?.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'));
+ assert.equal(adUrls.length,43,'Unexpected AdSense code coverage: '+adUrls.length);
+ for(const route of ['/contact','/terms','/guides/word-to-pdf-guide','/guides/searchable-ocr-guide','/guides/pdfa-guide','/guides/repair-pdf-guide','/guides/office-fonts-pdf-guide']){
+  const body=pageBodies.get(BASE+route);
+  assert.ok(body,'Missing audited page body: '+route);
+  assert.doesNotMatch(body,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Non-monetized page unexpectedly loads AdSense: '+route);
+ }
+ console.log('INFO: AdSense loader is present on '+adUrls.length+' of '+targets.length+' sitemap URLs.');
+});
 await check('Audited tools are indexable and monetized; beta tools remain excluded',async()=>{
  const home=(await fetchText('/')).body;
  const tag=[...home.matchAll(/<meta\b[^>]*>/gi)].map(x=>x[0]).find(x=>/name=["']google-adsense-account["']/i.test(x));
