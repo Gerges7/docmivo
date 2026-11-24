@@ -85,7 +85,7 @@ const sitemap=await fetchText('/sitemap.xml').then(r=>r.body).catch(e=>{failures
 const urls=[...sitemap.matchAll(/<loc>\s*([^<]+)\s*<\/loc>/gi)].map(x=>x[1].replace(/&amp;/g,'&'));
 await check('Sitemap is canonical, nonempty and excludes paused tools',async()=>{
  assert.match(sitemap,/<urlset\b/i);
- assert.ok(urls.length>=46,'Too few curated indexable entries: '+urls.length);
+ assert.ok(urls.length>=50,'Too few curated indexable entries: '+urls.length);
  assert.equal(new Set(urls).size,urls.length,'Sitemap duplicate URL');
  for(const url of urls)assert.ok(url.startsWith(BASE+'/'),'Noncanonical sitemap host '+url);
  for(const paused of ['word-to-pdf','excel-to-pdf','protect-pdf','repair-pdf','searchable-ocr-pdf','pdfa-converter'])assert.ok(!urls.includes(BASE+'/tools/'+paused),'Paused tool indexed: '+paused);
@@ -109,21 +109,23 @@ let cursor=0;const workers=Array.from({length:3},async()=>{
  }
 });
 await Promise.all(workers);
-await check('Only the two audited tool pages are indexable and monetized',async()=>{
+await check('Audited tools are indexable and monetized; beta tools remain excluded',async()=>{
  const home=(await fetchText('/')).body;
  const tag=[...home.matchAll(/<meta\b[^>]*>/gi)].map(x=>x[0]).find(x=>/name=["']google-adsense-account["']/i.test(x));
  const publisher=tag?.match(/content=["']ca-pub-(\d+)["']/i)?.[1];
  assert.ok(publisher,'Publisher ID unavailable for page-scope audit');
- for(const route of ['/tools/qr-code','/tools/image-resize']){
+ const monetized=['/tools/qr-code','/tools/image-resize','/tools/merge-pdf','/tools/compress-pdf','/tools/sign-pdf','/tools/watermark-pdf','/tools/ocr-pdf','/tools/rotate-pdf'];
+ for(const route of monetized){
   const page=(await fetchText(route)).body;
-  assert.ok(!/name=["']robots["'][^>]*noindex/i.test(page),'Audited tool unexpectedly noindex: '+route);
-  assert.ok(page.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Audited tool missing AdSense code: '+route);
+  assert.ok(!/<meta\b(?=[^>]*\bname=["']robots["'])(?=[^>]*\bcontent=["'][^"']*noindex)/i.test(page),'Verified tool unexpectedly noindex: '+route);
+  assert.ok(page.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Verified tool missing AdSense code: '+route);
+  assert.ok(urls.includes(BASE+route),'Verified tool missing from sitemap: '+route);
  }
- for(const route of ['/tools/merge-pdf','/tools/pdf-info','/tools/compress-pdf','/tools/sign-pdf','/tools/watermark-pdf']){
+ for(const route of ['/tools/image-compress','/tools/add-text-pdf','/tools/pdf-to-powerpoint']){
   const page=(await fetchText(route)).body;
-  assert.match(page,/noindex/i,'Unverified tool should remain noindex: '+route);
-  assert.doesNotMatch(page,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Unverified tool should not load ads: '+route);
-  assert.ok(!urls.includes(BASE+route),'Unverified tool must not be in sitemap: '+route);
+  assert.match(page,/noindex/i,'Untested beta tool should remain noindex: '+route);
+  assert.doesNotMatch(page,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Untested beta tool should not load ads: '+route);
+  assert.ok(!urls.includes(BASE+route),'Untested beta tool must not be in sitemap: '+route);
  }
 });
 await check('Paused converter accurately warns users and remains noindex',async()=>{
