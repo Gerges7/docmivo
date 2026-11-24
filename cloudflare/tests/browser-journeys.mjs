@@ -398,14 +398,46 @@ await check('Theme preferences persist and EN FR ES navigation stays usable',asy
 
 
 // Additional document integrity checks: high-value tools previously only received route smoke tests.
-await check('Compress PDF returns a readable two-page PDF with preserved dimensions',async()=>{
+await check('Smart compression refuses to destroy text when size cannot be reduced',async()=>{
  const input=await makePdf([330,510]);
- const {data,name}=await toolDownload('/tools/compress-pdf',[{name:'source.pdf',mimeType:'application/pdf',buffer:input}],'#scale','1');
+ const p=await pageAt('/tools/compress-pdf');
+ try{
+  await p.waitForFunction(()=>!!window.PDFLib&&!!window.pdfjsLib,{timeout:30000});
+  await p.locator('#fileInput').setInputFiles([{name:'searchable.pdf',mimeType:'application/pdf',buffer:input}]);
+  await p.locator('#compressMode').selectOption('auto');
+  let downloads=0;p.on('download',()=>downloads++);
+  await p.locator('#runTool').click();
+  await p.waitForFunction(()=>document.getElementById('status')?.classList.contains('error'),{timeout:20000});
+  const message=await p.locator('#status').innerText();
+  assert.match(message,/يحتوي نصًا قابلًا للنسخ|لم تنجح إعادة تعبئته/);
+  assert.equal(downloads,0,'Must not invent an improvement or silently rasterize searchable PDF');
+ }finally{await p.close();}
+});
+await check('Visual compression genuinely reduces image-only PDF while preserving page dimensions',async()=>{
+ const p=await pageAt('/tools/compress-pdf');
+ let png;
+ try{
+  png=Buffer.from(await p.evaluate(()=>{
+   const canvas=document.createElement('canvas');canvas.width=400;canvas.height=500;
+   const ctx=canvas.getContext('2d'),image=ctx.createImageData(400,500);
+   let seed=20261124;
+   for(let i=0;i<image.data.length;i+=4){
+    seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+    image.data[i]=seed&255;image.data[i+1]=(seed>>>8)&255;image.data[i+2]=(seed>>>16)&255;image.data[i+3]=255;
+   }
+   ctx.putImageData(image,0,0);
+   return canvas.toDataURL('image/png').split(',')[1];
+  }),'base64');
+ }finally{await p.close();}
+ const doc=await PDFDocument.create(),image=await doc.embedPng(png);
+ const page=doc.addPage([400,500]);page.drawImage(image,{x:0,y:0,width:400,height:500});
+ const input=Buffer.from(await doc.save());
+ const {data,name}=await toolDownload('/tools/compress-pdf',[{name:'scan.pdf',mimeType:'application/pdf',buffer:input}],'#scale','1');
  assert.equal(name,'compressed.pdf');
- const d=await PDFDocument.load(data);
- assert.equal(d.getPageCount(),2);
- assert.ok(Math.abs(d.getPage(0).getWidth()-330)<2);
- assert.ok(Math.abs(d.getPage(1).getWidth()-510)<2);
+ assert.ok(data.length<input.length,'Compressed output must be smaller for noisy scan');
+ const output=await PDFDocument.load(data);
+ assert.equal(output.getPageCount(),1);
+ assert.ok(Math.abs(output.getPage(0).getWidth()-400)<2);
 });
 await check('Grayscale PDF returns valid pages instead of an empty or renamed image',async()=>{
  const input=await makePdf([330,510]);
