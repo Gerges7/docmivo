@@ -110,6 +110,10 @@ let cursor=0;const workers=Array.from({length:3},async()=>{
 });
 await Promise.all(workers);
 await check('Only the two audited tool pages are indexable and monetized',async()=>{
+ const home=(await fetchText('/')).body;
+ const tag=[...home.matchAll(/<meta\\b[^>]*>/gi)].map(x=>x[0]).find(x=>/name=[\"']google-adsense-account[\"']/i.test(x));
+ const publisher=tag?.match(/content=[\"']ca-pub-(\\d+)[\"']/i)?.[1];
+ assert.ok(publisher,'Publisher ID unavailable for page-scope audit');
  for(const route of ['/tools/qr-code','/tools/image-resize']){
   const page=(await fetchText(route)).body;
   assert.ok(!/name=["']robots["'][^>]*noindex/i.test(page),'Audited tool unexpectedly noindex: '+route);
