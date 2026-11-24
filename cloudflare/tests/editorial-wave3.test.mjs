@@ -27,7 +27,7 @@ const cases=[
 const page=(marker,noindex=false)=>{
  const meta=noindex?'<meta name="robots" content="noindex,follow">':'';
  const inside=marker==='</article>'?'<p>existing QR content</p>':marker;
- return '<html><head><title>Guide</title>'+meta+'</head><body><main><h1>Guide</h1><p>Existing guide copy</p><article>'+inside+'</article></main></body></html>';
+ return '<html><head><title>Guide</title>'+meta+'</head><body><main><h1>Guide</h1><p>دليل DocMivo • مراجعة وتحديث 2026-10-12</p><article>'+inside+'</article></main></body></html>';
 };
 
 test('adds distinct task-specific guidance to all 17 selected guides',()=>{
