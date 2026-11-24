@@ -109,6 +109,19 @@ let cursor=0;const workers=Array.from({length:3},async()=>{
  }
 });
 await Promise.all(workers);
+await check('Only the two audited tool pages are indexable and monetized',async()=>{
+ for(const route of ['/tools/qr-code','/tools/image-resize']){
+  const page=(await fetchText(route)).body;
+  assert.ok(!/name=["']robots["'][^>]*noindex/i.test(page),'Audited tool unexpectedly noindex: '+route);
+  assert.ok(page.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Audited tool missing AdSense code: '+route);
+ }
+ for(const route of ['/tools/merge-pdf','/tools/pdf-info','/tools/compress-pdf','/tools/sign-pdf','/tools/watermark-pdf']){
+  const page=(await fetchText(route)).body;
+  assert.match(page,/noindex/i,'Unverified tool should remain noindex: '+route);
+  assert.doesNotMatch(page,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Unverified tool should not load ads: '+route);
+  assert.ok(!urls.includes(BASE+route),'Unverified tool must not be in sitemap: '+route);
+ }
+});
 await check('Paused converter accurately warns users and remains noindex',async()=>{
  const {body}=await fetchText('/tools/word-to-pdf');
  assert.match(body,/noindex/i);
