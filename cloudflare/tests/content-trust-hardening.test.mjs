@@ -56,6 +56,10 @@ test('claims about Word conversion and OCR can be corrected without touching unr
  assert.match(updated,/استخرج وضع Smart النص المضمّن من صفحتين/);
  assert.match(updated,/عبارة اختبار إنجليزية في صورة ممسوحة/);
  assert.match(updated,/other content/);
+ assert.match(updated,/50 رابطًا/);
+ assert.match(updated,/43 صفحة/);
+ assert.match(updated,/تظل الأدوات المنشورة الأخرى التي اجتازت اختبارات مستقلة/);
+ assert.match(updated,/Image Compress وAdd Text وPDF إلى PowerPoint noindex/);
  assert.doesNotMatch(updated,/ثم نرفض التعديل تلقائيًا/);
  assert.throws(()=>improveQualityClaims(updated));
 });
