@@ -85,7 +85,7 @@ const sitemap=await fetchText('/sitemap.xml').then(r=>r.body).catch(e=>{failures
 const urls=[...sitemap.matchAll(/<loc>\s*([^<]+)\s*<\/loc>/gi)].map(x=>x[1].replace(/&amp;/g,'&'));
 await check('Sitemap is canonical, nonempty and excludes paused tools',async()=>{
  assert.match(sitemap,/<urlset\b/i);
- assert.ok(urls.length>=46,'Too few curated indexable entries: '+urls.length);
+ assert.ok(urls.length>=50,'Too few curated indexable entries: '+urls.length);
  assert.equal(new Set(urls).size,urls.length,'Sitemap duplicate URL');
  for(const url of urls)assert.ok(url.startsWith(BASE+'/'),'Noncanonical sitemap host '+url);
  for(const paused of ['word-to-pdf','excel-to-pdf','protect-pdf','repair-pdf','searchable-ocr-pdf','pdfa-converter'])assert.ok(!urls.includes(BASE+'/tools/'+paused),'Paused tool indexed: '+paused);
