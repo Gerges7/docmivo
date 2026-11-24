@@ -10,6 +10,7 @@ const checks=[
  ['/ads.txt',s=>s.split(/\r?\n/).some(row=>row.trim()===seller)],
  ['/',s=>/name=["']google-adsense-account["']/.test(s)&&s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher)],
  ['/contact',s=>!s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')],
+ ['/tools/merge-pdf',s=>!s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')],
  ['/tools/add-text-pdf',s=>/noindex/i.test(s)&&!s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')],
  ['/sitemap.xml',s=>(s.match(/<loc>/g)||[]).length>=50&&s.includes('<loc>https://getdocmivo.com/guides/qr-code-guide</loc>')&&s.includes('<loc>https://getdocmivo.com/guides/image-optimization-guide</loc>')],
  ['/guides',s=>s.includes('href="/guides/qr-code-guide"')&&s.includes('href="/guides/image-optimization-guide"')],
