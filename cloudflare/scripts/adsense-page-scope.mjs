@@ -1,14 +1,14 @@
 /**
  * DocMivo AdSense scope policy.
  * Keep publisher verification/Auto Ads only on indexable, publisher-value pages.
- * Legal/contact pages, noindex tools and unavailable-tool guides are not ad inventory.
+ * Contact/terms pages, noindex tools and unavailable-tool guides are not ad inventory. Privacy/cookie pages retain the Google consent interface.
  * Google Analytics is intentionally left untouched.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-const LEGAL_PAGES=new Set(['contact.html','privacy.html','terms.html','cookies.html','404.html']);
+const LEGAL_PAGES=new Set(['contact.html','terms.html','404.html']);
 const NON_MONETIZED_PREFIXES=['v17-preview/'];
 const NON_MONETIZED_GUIDES=new Set([
  'guides/word-to-pdf-guide.html',
