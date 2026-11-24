@@ -75,7 +75,7 @@ await check('Sitemap is canonical, nonempty and excludes paused tools',async()=>
  assert.equal(new Set(urls).size,urls.length,'Sitemap duplicate URL');
  for(const url of urls)assert.ok(url.startsWith(BASE+'/'),'Noncanonical sitemap host '+url);
  for(const paused of ['word-to-pdf','excel-to-pdf','protect-pdf','repair-pdf','searchable-ocr-pdf','pdfa-converter'])assert.ok(!urls.includes(BASE+'/tools/'+paused),'Paused tool indexed: '+paused);
- for(const required of ['/','/guides','/guides/pdf-workflows','/tools/merge-pdf','/tools/pdf-info'])assert.ok(urls.includes(BASE+required),'Missing important sitemap URL: '+required);
+ for(const required of ['/','/guides','/guides/pdf-workflows','/guides/qr-code-guide','/guides/image-optimization-guide','/tools/merge-pdf','/tools/pdf-info'])assert.ok(urls.includes(BASE+required),'Missing important sitemap URL: '+required);
 });
 const targets=urls.filter(u=>u.startsWith(BASE+'/'));
 let cursor=0;const workers=Array.from({length:3},async()=>{
@@ -106,6 +106,14 @@ await check('New original PDF workflow guide and theme are deployed',async()=>{
  assert.match(home,/data-docmivo-experience/,'Global dark-mode boot missing');
  const guide=(await fetchText('/guides/pdf-workflows')).body;
  for(const id of ['too-large','wrong-order','scanned','privacy','format','office'])assert.ok(guide.includes('id="'+id+'"'),'Missing scenario '+id);
+ const hub=(await fetchText('/guides')).body;
+ assert.ok(hub.includes('href="/guides/qr-code-guide"'),'QR guide is missing from guide hub');
+ assert.ok(hub.includes('href="/guides/image-optimization-guide"'),'Image optimization guide is missing from guide hub');
+ for(const [route,marker] of [['/guides/qr-code-guide','data-editorial-wave3="qr-code"'],['/guides/image-optimization-guide','data-editorial-wave3="image-optimization"']]){
+  const page=(await fetchText(route)).body;
+  assert.ok(page.includes(marker),'Missing original content section: '+route);
+  assert.ok(!/name=["']robots["'][^>]*noindex/i.test(page),'New guide remains noindex: '+route);
+ }
 });
 const oks=measurements.filter(x=>x.status===200),sorted=oks.map(x=>x.ms).sort((a,b)=>a-b);
 console.log('PRODUCTION HTTP SUMMARY: '+JSON.stringify({pages:urls.length,requests:measurements.length,status200:oks.length,medianMs:sorted[Math.floor(sorted.length/2)]||0,p95Ms:sorted[Math.floor(sorted.length*.95)]||0,failures:failures.length}));
