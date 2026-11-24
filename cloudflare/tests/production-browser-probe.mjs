@@ -6,7 +6,7 @@ import {chromium} from 'playwright';
 import fs from 'node:fs';
 const BASE=process.env.DOCMIVO_BASE||'https://getdocmivo.com';
 let code='unavailable';
-const browser=await chromium.launch({headless:true});
+const browser=await chromium.launch({headless:true,...(process.env.DOCMIVO_BROWSER_CHANNEL?{channel:process.env.DOCMIVO_BROWSER_CHANNEL}:{})});
 try{
  const page=await browser.newPage({viewport:{width:390,height:844}});
  const response=await page.goto(BASE+'/',{waitUntil:'domcontentloaded',timeout:30000}).catch(e=>{console.error('Browser probe navigation error: '+e.message);return null;});
