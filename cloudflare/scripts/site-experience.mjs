@@ -38,6 +38,25 @@ export function enhanceHtml(html,relative){
       out=out.replace(/<title>[\s\S]*?<\/title>/i,'<title>'+title+'</title>');
     }
   }
+  // Index a verified tool only after giving the user accurate, specific instructions.
+  if(relative==='tools/pdf-info/index.html'){
+    const beta='<meta content="noindex,follow" name="robots"/>';
+    if(!out.includes(beta))throw new Error('PDF Info must begin in noindex QA state');
+    const section=/<section class="content-block"><h2>كيفية استخدام أداة معلومات PDF<\/h2>[\s\S]*?<\/section>/i;
+    if(!section.test(out))throw new Error('PDF Info generic instructions changed');
+    out=out.replace(beta,'');
+    out=out.replace(section,'<section class="content-block dm-pdf-info-verified"><h2>فحص عدد صفحات PDF والبيانات الوصفية خطوة بخطوة</h2><ol><li>اختر ملف PDF من جهازك وتأكد أن اسمه ظهر في قائمة الملفات.</li><li>اضغط «ابدأ العملية»؛ تُقرأ بيانات المستند محليًا داخل المتصفح.</li><li>اقرأ المعلومات داخل الصفحة، مثل اسم الملف وحجمه وعدد الصفحات والعنوان والمؤلف. <strong>هذه الأداة تعرض النتائج ولا تنشئ ملفًا جديدًا للتنزيل.</strong></li></ol></section>');
+    const original='<h2>متى تكون أداة معلومات PDF مفيدة؟</h2>';
+    const explanation='<h2>ما المقصود ببيانات PDF المعروضة؟</h2><p>الحقل <strong dir="ltr">pages</strong> هو عدد الصفحات الفعلي. ويعرض <strong dir="ltr">name</strong> اسم الملف المختار و<strong dir="ltr">size</strong> حجمه. أما <strong dir="ltr">title</strong> و<strong dir="ltr">author</strong> و<strong dir="ltr">subject</strong> فهي بيانات وصفية قد تكون ناقصة أو غير دقيقة. ويشير <strong dir="ltr">creator</strong> و<strong dir="ltr">producer</strong> عادةً إلى البرامج التي أنشأت المستند أو أنتجته.</p><p>إذا ظهر الرمز «—» لحقل ما، فهذا يعني أن قيمة الحقل غير متاحة للأداة، ولا يعني أن المستند خالٍ من المعلومات الحساسة أو المحتوى المخفي.</p><h3>متى تستخدم الأداة؟</h3>';
+    if(!out.includes(original))throw new Error('PDF Info use case section missing');
+    out=out.replace(original,explanation);
+    const old='إذا كنت تعمل على مستند مهم، قارن النسخة الناتجة بالأصل قبل الحذف أو الإرسال.';
+    if(out.includes(old))out=out.replace(old,'قبل إرسال ملف مهم، راجع عدد صفحاته والحقول الوصفية. قراءة هذه الحقول لا تحذفها، ولا تثبت هوية منشئ المستند؛ يمكنك استخدام أداة إزالة البيانات الوصفية بصورة منفصلة ثم مراجعة النسخة الجديدة.');
+    const extra='<section class="content-block dm-pdf-info-verified"><h2>حدود الفحص وخصوصية الملف</h2><p>هذه الأداة لا تغير الملف الأصلي، ولا تحفظ نسخة جديدة، ولا تتطلب رفع ملف PDF إلى خادم DocMivo. بعض الملفات المشفرة أو التالفة قد يتعذر فتحها. لا يكشف هذا الفحص وحده النصوص المخفية داخل الصفحات أو المرفقات أو المعلومات الحساسة الموجودة في الصور المضمنة، لذلك لا تعتبره فحصًا أمنيًا شاملًا.</p></section>';
+    const before='<section class="content-block v5-seo"><h2>الخصوصية وطريقة المعالجة</h2>';
+    if(!out.includes(before))throw new Error('PDF Info privacy section missing');
+    out=out.replace(before,extra+before);
+  }
   // Footer navigation groups should not skip directly from H2 to H4.
   out=out.replace(/<footer\b[\s\S]*?<\/footer>/gi,section=>section.replace(/<(\/?)h4(\s|>)/gi,'<$1h2$2'));
   // File upload affordance is a control label, not a new subheading before first H2.
@@ -56,6 +75,13 @@ export function installExperience(dist){
     const rel=path.relative(dist,file).replace(/\\/g,'/');
     const html=fs.readFileSync(file,'utf8');
     fs.writeFileSync(file,enhanceHtml(html,rel));
+  }
+  // PDF Info is now covered by the browser output test and has real task-specific guidance.
+  const sitemap=path.join(dist,'sitemap.xml'),xml=fs.readFileSync(sitemap,'utf8');
+  const entry='<loc>https://getdocmivo.com/tools/pdf-info</loc>';
+  if(!xml.includes(entry)){
+    if(!xml.includes('</urlset>'))throw new Error('Cannot extend malformed sitemap');
+    fs.writeFileSync(sitemap,xml.replace('</urlset>','  <url>'+entry+'</url>\n</urlset>'));
   }
   const styles=fs.readFileSync(css,'utf8');
   fs.appendFileSync(css,'\n.dm-dropzone-title{font-size:1.18rem;font-weight:800;margin:10px 0 4px}\n');
