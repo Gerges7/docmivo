@@ -64,6 +64,14 @@ const entries={
   marker:'<h2>قائمة مراجعة سريعة</h2>',
   section:'<section class="content-block dm-editorial-wave3" data-editorial-wave3="office-fonts"><h2>قائمة فحص للمستند قبل تحويله على جهاز آخر</h2><ol><li>اكتب أسماء الخطوط المستخدمة، وتحقق من وجودها على جهاز التحويل أو من إمكانية تضمينها في المستند.</li><li>راجع عرض الجداول والصفوف التي تحتوي نصًا عربيًا وإنجليزيًا في السطر نفسه.</li><li>استخدم فواصل صفحات صريحة قبل العناوين التي لا تريد فصلها عن الفقرة التالية.</li><li>افحص الصور والرؤوس والتذييلات وأرقام الصفحات بعد التصدير.</li></ol><p>الخط البديل قد يكون قريبًا في الشكل لكنه يختلف في عرض الحروف، فيؤدي إلى التفاف سطر أو انتقال جدول إلى صفحة أخرى. لذلك لا يكفي فحص الصفحة الأولى؛ راجع الصفحات التي تحتوي أطول جدول وأصغر خط. إذا كان المستند رسميًا، افتح PDF الناتج في قارئ آخر وقارن عدد الصفحات وحدود الجداول.</p><p><strong>حالة DocMivo:</strong> خدمة تحويل ملفات Office غير مفعّلة حاليًا، لذلك لا ندّعي أن الموقع يحول Word أو Excel في الوقت الحالي. هذه خطوات تحقق عامة لاستخدام محرك تحويل متاح لديك.</p></section>'
  },
+ 'guides/image-optimization-guide.html':{
+  marker:'<h2>قائمة المراجعة</h2>',
+  section:'<section class="content-block dm-editorial-wave3" data-editorial-wave3="image-optimization"><h2>اختيار الإعدادات في أداة تغيير حجم الصور</h2><p>تقبل الأداة صور JPEG وPNG وWebP حتى 20 MB. الحد الأعلى لكل بُعد هو 12000 بكسل، مع حد إجمالي لحجم الصورة يبلغ 32 مليون بكسل لتقليل ضغط الذاكرة على المتصفح. فعّل الحفاظ على التناسب، ثم غيّر العرض فقط إذا كنت تريد تصغير صورة دون تمديدها.</p><ul><li><strong>JPEG:</strong> مناسب للصور الفوتوغرافية عندما لا تحتاج شفافية.</li><li><strong>PNG:</strong> مناسب للشعارات والرسومات والخلفيات الشفافة.</li><li><strong>WebP:</strong> خيار عملي للويب، لكن تحقق من توافق التطبيق الذي سيستقبل الملف.</li></ul><p>مستوى الجودة من 20 إلى 100 يؤثر في حجم JPEG أو WebP وتفاصيل الصورة. لا توجد قيمة واحدة مثالية لكل الصور؛ قارن النتيجة عند الحجم الفعلي الذي ستعرضه فيه. التكبير لا يعيد تفاصيل غير موجودة في المصدر، وJPEG يحول المناطق الشفافة إلى خلفية بيضاء. إعادة التصدير عبر Canvas قد تزيل بعض بيانات EXIF، لذلك احتفظ بالأصل إذا كانت بيانات الكاميرا مهمة.</p><p>مثال: صورة 4000 × 3000 بكسل يمكن تصغيرها إلى 1200 × 900 للويب مع قفل نسبة الأبعاد. افتح الناتج عند 100% وتحقق من النصوص والحواف قبل استبدال الصورة المنشورة.</p></section>'
+ },
+ 'guides/qr-code-guide.html':{
+  marker:'</article>',
+  section:'<section class="content-block dm-editorial-wave3" data-editorial-wave3="qr-code"><h2>اختيار نوع QR والإعداد قبل الطباعة</h2><ul><li><strong>URL:</strong> استخدم رابط HTTPS ثابتًا على نطاق تتحكم فيه؛ الرمز الثابت لا يغيّر وجهته بعد الطباعة.</li><li><strong>Wi-Fi:</strong> اختر نوع الحماية الصحيح، ولا تستخدم WEP القديم لشبكة جديدة. كلمة المرور مشفرة داخل بيانات الرمز ويمكن استخراجها بالمسح.</li><li><strong>vCard:</strong> أضف الاسم والهاتف بصيغة دولية والبريد المهني فقط؛ لا تضع بيانات شخصية لا يحتاجها المستلم.</li></ul><p>يوفر DocMivo تصدير PNG بمقاسات 256 و512 و1024 بكسل، إضافة إلى SVG للطباعة المتجهية. اترك المساحة البيضاء المحيطة بالرمز ولا تضع شعارًا فوق المربعات. حافظ على لون داكن فوق خلفية فاتحة، واختبر الرمز من مسافة وحجم الطباعة الفعليين.</p><h3>مستوى تصحيح الأخطاء</h3><p>المستوى M متوازن للرموز العادية، بينما Q وH يوفران قدرة أعلى على استعادة البيانات عند تلف جزء من الرمز، لكنهما قد يزيدان كثافة النقاط. اختر مستوى أعلى عند توقع خدش أو اتساخ، ولا تجمع ذلك مع بيانات طويلة وأبعاد صغيرة. إذا أصبح الرمز مزدحمًا، اختصر الرابط أو قلل البيانات بدل تصغير الصورة أكثر.</p><p>بعد التوليد امسح الرمز بكاميرا هاتفين مختلفين، وتأكد من فتح الرابط الصحيح أو ظهور شبكة Wi-Fi أو بطاقة الاتصال المقصودة. هذه أداة QR ثابتة؛ عند تغيير الرابط أو كلمة مرور الشبكة يجب إصدار صورة جديدة وتحديث النسخ المطبوعة.</p></section>'
+ },
  'guides/word-to-pdf-guide.html':{
   marker:'<h2>قائمة مراجعة سريعة</h2>',
   section:'<section class="content-block dm-editorial-wave3" data-editorial-wave3="word-to-pdf"><h2>فحص المستند العربي قبل تصديره إلى PDF</h2><p>في المستندات العربية، راجع اتجاه الفقرات والقوائم والأرقام داخل السطر المختلط. تأكد أن الجداول لا تتجاوز الهوامش وأن ارتفاع الصف يسمح بظهور النص كاملًا. لا تستخدم مسافات متكررة لمحاذاة الأعمدة؛ استخدم جدولًا أو إعداد Tab واضحًا حتى لا يتغير التخطيط عند اختلاف الخط.</p><ul><li>ثبّت حجم الورق والهوامش قبل إضافة فواصل الصفحات.</li><li>استخدم خطوطًا متاحة أو مضمنة حسب برنامج التصدير.</li><li>افحص الصور والرؤوس والتذييلات بعد التصدير.</li><li>قارن عدد الصفحات والجدول الأطول والصفحة الأخيرة.</li></ul><p><strong>حالة DocMivo:</strong> خدمة تحويل Word إلى PDF غير مفعّلة حاليًا. لا ترفع ملفًا إلى صفحة غير متاحة؛ استخدم برنامجًا موثوقًا لديك واتبع قائمة الفحص أعلاه.</p></section>'
@@ -83,6 +91,7 @@ function updateLastmod(sitemap,relative){
   :block.replace('</url>','<lastmod>2026-11-24</lastmod></url>');
  return sitemap.slice(0,start)+changed+sitemap.slice(end);
 }
+const NEW_INDEXABLE_GUIDES=new Set(['guides/image-optimization-guide.html','guides/qr-code-guide.html']);
 export function enhanceGuide(html,relative){
  const entry=entries[relative];
  if(!entry)return String(html);
@@ -91,6 +100,10 @@ export function enhanceGuide(html,relative){
  if(!out.includes(entry.marker))throw new Error('Editorial wave 3 marker changed: '+relative);
  out=out.replace(entry.marker,entry.section+entry.marker);
  out=out.replace('دليل DocMivo • مراجعة وتحديث 2026-10-12','دليل DocMivo • آخر تحديث 2026-11-24');
+ if(NEW_INDEXABLE_GUIDES.has(relative)){
+  out=out.replace(/<meta\b(?=[^>]*\bname=["']robots["'])(?=[^>]*\bcontent=["'][^"']*\bnoindex\b)[^>]*>/i,'');
+  if(!/آخر تحديث:\s*24 نوفمبر 2026/.test(out))out=out.replace(/(<h1\b[^>]*>[\s\S]*?<\/h1>)/i,'$1<p class="guide-updated">آخر تحديث: 24 نوفمبر 2026</p>');
+ }
  if(!/آخر تحديث:\s*24 نوفمبر 2026/.test(out)&&relative==='guides/image-optimization-guide.html'){
   out=out.replace(/(<h1\b[^>]*>[\s\S]*?<\/h1>)/i,'$1<p class="guide-updated">آخر تحديث: 24 نوفمبر 2026</p>');
  }
@@ -107,6 +120,11 @@ export function applyEditorialWave3(dist){
   const before=fs.readFileSync(file,'utf8');
   const after=enhanceGuide(before,relative);
   if(after!==before)changed.push([file,after]);
+  const loc='<loc>https://getdocmivo.com/'+relative.replace(/^guides\\//,'guides/').replace(/\\.html$/,'')+'</loc>';
+  if(!sitemap.includes(loc)){
+   if(!NEW_INDEXABLE_GUIDES.has(relative))throw new Error('Editorial wave 3: missing sitemap entry '+relative);
+   sitemap=sitemap.replace('</urlset>','  <url>'+loc+'<lastmod>2026-11-24</lastmod></url>\\n</urlset>');
+  }
   sitemap=updateLastmod(sitemap,relative);
  }
  for(const [file,content] of changed)fs.writeFileSync(file,content);
