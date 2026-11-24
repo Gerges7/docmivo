@@ -92,7 +92,7 @@ await check('Sitemap is canonical, nonempty and excludes paused tools',async()=>
  for(const url of urls)assert.ok(url.startsWith(BASE+'/'),'Noncanonical sitemap host '+url);
  for(const paused of ['word-to-pdf','excel-to-pdf','protect-pdf','repair-pdf','searchable-ocr-pdf','pdfa-converter'])assert.ok(!urls.includes(BASE+'/tools/'+paused),'Paused tool indexed: '+paused);
  for(const required of ['/','/guides','/guides/pdf-workflows','/guides/qr-code-guide','/guides/image-optimization-guide','/tools/qr-code','/tools/image-resize','/tools/rotate-pdf'])assert.ok(urls.includes(BASE+required),'Missing important sitemap URL: '+required);
- for(const required of ['/guides/qr-code-guide','/guides/image-optimization-guide','/guides/pdf-workflows','/about','/privacy','/cookies','/quality']){
+ for(const required of ['/guides/qr-code-guide','/guides/image-optimization-guide','/guides/pdf-workflows','/tools/rotate-pdf','/about','/privacy','/cookies','/quality']){
   const loc='<loc>'+BASE+required+'</loc>',at=sitemap.indexOf(loc);
   assert.ok(at>=0,'Missing lastmod target '+required);
   const a=sitemap.lastIndexOf('<url>',at),b=sitemap.indexOf('</url>',at)+6;
