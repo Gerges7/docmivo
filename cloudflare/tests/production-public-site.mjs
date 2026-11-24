@@ -56,9 +56,11 @@ await check('AdSense publisher identity, seller authorization and verified crawl
  assert.ok(publisher,'Missing AdSense ownership meta tag on homepage');
  assert.equal(record[1],publisher,'ads.txt publisher ID does not match site verification ID');
  assert.ok(home.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'AdSense verification script missing from homepage');
- const activeTool=(await fetchText('/tools/merge-pdf')).body;
+ const activeTool=(await fetchText('/tools/qr-code')).body;
+ const activeImageTool=(await fetchText('/tools/image-resize')).body;
  const activeGuide=(await fetchText('/guides/pdf-workflows')).body;
- assert.ok(activeTool.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Active tool page missing AdSense code');
+ assert.ok(activeTool.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'QR tool page missing AdSense code');
+ assert.ok(activeImageTool.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Image resize page missing AdSense code');
  assert.ok(activeGuide.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Monetized guide missing AdSense code');
  const robots=(await fetchText('/robots.txt')).body;
  assert.match(robots,/User-agent:\s*Mediapartners-Google\s*\nAllow:\s*\//i,'AdSense ads crawler is not explicitly allowed');
@@ -87,7 +89,7 @@ await check('Sitemap is canonical, nonempty and excludes paused tools',async()=>
  assert.equal(new Set(urls).size,urls.length,'Sitemap duplicate URL');
  for(const url of urls)assert.ok(url.startsWith(BASE+'/'),'Noncanonical sitemap host '+url);
  for(const paused of ['word-to-pdf','excel-to-pdf','protect-pdf','repair-pdf','searchable-ocr-pdf','pdfa-converter'])assert.ok(!urls.includes(BASE+'/tools/'+paused),'Paused tool indexed: '+paused);
- for(const required of ['/','/guides','/guides/pdf-workflows','/guides/qr-code-guide','/guides/image-optimization-guide','/tools/merge-pdf','/tools/pdf-info'])assert.ok(urls.includes(BASE+required),'Missing important sitemap URL: '+required);
+ for(const required of ['/','/guides','/guides/pdf-workflows','/guides/qr-code-guide','/guides/image-optimization-guide','/tools/qr-code','/tools/image-resize'])assert.ok(urls.includes(BASE+required),'Missing important sitemap URL: '+required);
  for(const required of ['/guides/qr-code-guide','/guides/image-optimization-guide','/guides/pdf-workflows','/about','/privacy','/cookies','/quality']){
   const loc='<loc>'+BASE+required+'</loc>',at=sitemap.indexOf(loc);
   assert.ok(at>=0,'Missing lastmod target '+required);
