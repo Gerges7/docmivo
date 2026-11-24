@@ -58,9 +58,11 @@ await check('AdSense publisher identity, seller authorization and verified crawl
  assert.ok(home.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'AdSense verification script missing from homepage');
  const activeTool=(await fetchText('/tools/qr-code')).body;
  const activeImageTool=(await fetchText('/tools/image-resize')).body;
+ const activeRotateTool=(await fetchText('/tools/rotate-pdf')).body;
  const activeGuide=(await fetchText('/guides/pdf-workflows')).body;
  assert.ok(activeTool.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'QR tool page missing AdSense code');
  assert.ok(activeImageTool.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Image resize page missing AdSense code');
+ assert.ok(activeRotateTool.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Rotate PDF page missing AdSense code');
  assert.ok(activeGuide.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Monetized guide missing AdSense code');
  const robots=(await fetchText('/robots.txt')).body;
  assert.match(robots,/User-agent:\s*Mediapartners-Google\s*\nAllow:\s*\//i,'AdSense ads crawler is not explicitly allowed');
@@ -89,8 +91,8 @@ await check('Sitemap is canonical, nonempty and excludes paused tools',async()=>
  assert.equal(new Set(urls).size,urls.length,'Sitemap duplicate URL');
  for(const url of urls)assert.ok(url.startsWith(BASE+'/'),'Noncanonical sitemap host '+url);
  for(const paused of ['word-to-pdf','excel-to-pdf','protect-pdf','repair-pdf','searchable-ocr-pdf','pdfa-converter'])assert.ok(!urls.includes(BASE+'/tools/'+paused),'Paused tool indexed: '+paused);
- for(const required of ['/','/guides','/guides/pdf-workflows','/guides/qr-code-guide','/guides/image-optimization-guide','/tools/qr-code','/tools/image-resize'])assert.ok(urls.includes(BASE+required),'Missing important sitemap URL: '+required);
- for(const required of ['/guides/qr-code-guide','/guides/image-optimization-guide','/guides/pdf-workflows','/about','/privacy','/cookies','/quality']){
+ for(const required of ['/','/guides','/guides/pdf-workflows','/guides/qr-code-guide','/guides/image-optimization-guide','/tools/qr-code','/tools/image-resize','/tools/rotate-pdf'])assert.ok(urls.includes(BASE+required),'Missing important sitemap URL: '+required);
+ for(const required of ['/guides/qr-code-guide','/guides/image-optimization-guide','/guides/pdf-workflows','/tools/rotate-pdf','/about','/privacy','/cookies','/quality']){
   const loc='<loc>'+BASE+required+'</loc>',at=sitemap.indexOf(loc);
   assert.ok(at>=0,'Missing lastmod target '+required);
   const a=sitemap.lastIndexOf('<url>',at),b=sitemap.indexOf('</url>',at)+6;
@@ -109,12 +111,12 @@ let cursor=0;const workers=Array.from({length:3},async()=>{
  }
 });
 await Promise.all(workers);
-await check('Only the two audited tool pages are indexable and monetized',async()=>{
+await check('Only the three audited tool pages are indexable and monetized',async()=>{
  const home=(await fetchText('/')).body;
  const tag=[...home.matchAll(/<meta\b[^>]*>/gi)].map(x=>x[0]).find(x=>/name=["']google-adsense-account["']/i.test(x));
  const publisher=tag?.match(/content=["']ca-pub-(\d+)["']/i)?.[1];
  assert.ok(publisher,'Publisher ID unavailable for page-scope audit');
- for(const route of ['/tools/qr-code','/tools/image-resize']){
+ for(const route of ['/tools/qr-code','/tools/image-resize','/tools/rotate-pdf']){
   const page=(await fetchText(route)).body;
   assert.ok(!/name=["']robots["'][^>]*noindex/i.test(page),'Audited tool unexpectedly noindex: '+route);
   assert.ok(page.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Audited tool missing AdSense code: '+route);
