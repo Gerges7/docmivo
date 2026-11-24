@@ -33,19 +33,17 @@ test('Verified PDF Info replaces inaccurate download instructions and removes no
 });
 
 test('defers local UI bootstrap and tool engine scripts without changing their order',()=>{
- const html=[
-  '<script src="assets/js/config.v14.js"></script>',
-  '<script src="assets/js/tools-data.v14.js"></script>',
-  '<script src="assets/js/site.v14.js"></script>',
-  '<script src="assets/js/tool-engine.v14.js"></script>'
- ].join('');
- const out=enhanceHtml(fixture.replace('</body>','</body>'),'index.html');
- const transformed=out.replace(/<script data-docmivo-experience>[\s\S]*?<\/script>/,'');
- const ordered=html.replace(/<script/g,'<script');
- assert.match(transformed,/<script defer src="assets\/js\/config\.v14\.js"><\/script>/);
- assert.match(transformed,/<script defer src="assets\/js\/tools-data\.v14\.js"><\/script>/);
- assert.match(transformed,/<script defer src="assets\/js\/site\.v14\.js"><\/script>/);
- assert.match(transformed,/<script defer src="assets\/js\/tool-engine\.v14\.js"><\/script>/);
+ const scripts='<script src="assets/js/config.v14.js"></script>'+
+  '<script src="assets/js/tools-data.v14.js"></script>'+
+  '<script src="assets/js/site.v14.js"></script>'+
+  '<script src="assets/js/tool-engine.v14.js"></script>';
+ const input=fixture.replace('</body>',scripts+'</body>');
+ const out=enhanceHtml(input,'index.html');
+ for(const file of ['config.v14.js','tools-data.v14.js','site.v14.js','tool-engine.v14.js']){
+  assert.match(out,new RegExp('<script defer src="assets/js/'+file.replace(/\./g,'\\.')+'"><\\/script>'));
+ }
+ const positions=['config.v14.js','tools-data.v14.js','site.v14.js','tool-engine.v14.js'].map(x=>out.indexOf(x));
+ assert.deepEqual(positions,[...positions].sort((a,b)=>a-b));
 });
 
 test('leaves asynchronous Google tags, vendor libraries and inline bootstrap untouched',()=>{
