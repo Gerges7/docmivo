@@ -104,6 +104,7 @@ export function enhanceGuide(html,relative){
   out=out.replace(/<meta\b(?=[^>]*\bname=["']robots["'])(?=[^>]*\bcontent=["'][^"']*\bnoindex\b)[^>]*>/i,'');
   if(!/آخر تحديث:\s*24 نوفمبر 2026/.test(out))out=out.replace(/(<h1\b[^>]*>[\s\S]*?<\/h1>)/i,'$1<p class="guide-updated">آخر تحديث: 24 نوفمبر 2026</p>');
  }
+ return out;
 }
 export function applyEditorialWave3(dist){
  const sitemapPath=path.join(dist,'sitemap.xml');
