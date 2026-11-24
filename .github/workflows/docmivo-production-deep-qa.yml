@@ -15,11 +15,6 @@ on:
       - 'robots.txt'
       - 'ads.txt'
       - '.github/workflows/docmivo-production-deep-qa.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'cloudflare/tests/production-public-site.mjs'
-      - '.github/workflows/docmivo-production-deep-qa.yml'
 permissions:
   contents: read
 jobs:
@@ -43,6 +38,8 @@ jobs:
         run: |
           node --check tests/production-public-site.mjs
           npm run build
+      - name: Wait for the AdSense configuration to reach Cloudflare production
+        run: node tests/wait-for-production-adsense.mjs
       - name: Check live health, every sitemap page, SEO integrity and AdSense files
         run: |
           set -o pipefail
