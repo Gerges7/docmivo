@@ -4,9 +4,10 @@
  */
 const BASE=(process.env.DOCMIVO_BASE||'https://getdocmivo.com').replace(/\/+$/,'');
 const publisher='1551519098591089';
+const seller='google.com, pub-'+publisher+', DIRECT, f08c47fec0942fa0';
 const checks=[
  ['/robots.txt',s=>/User-agent:\s*Mediapartners-Google\s*\nAllow:\s*\//i.test(s)&&/User-agent:\s*Google-Display-Ads-Bot\s*\nAllow:\s*\//i.test(s)],
- ['/ads.txt',s=>new RegExp('^google\\.com,\\s*pub-'+publisher+',\\s*DIRECT,\\s*f08c47fec0942fa0\\s*$','im').test(s)],
+ ['/ads.txt',s=>s.split(/\r?\n/).some(row=>row.trim()===seller)],
  ['/',s=>/name=["']google-adsense-account["']/.test(s)&&s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher)],
  ['/contact',s=>!s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')],
  ['/tools/add-text-pdf',s=>/noindex/i.test(s)&&!s.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')]
