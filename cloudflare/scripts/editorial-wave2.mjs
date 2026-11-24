@@ -141,7 +141,7 @@ export function includeVerifiedRotateInSitemap(xml){
   const at=s.indexOf(loc),start=s.lastIndexOf('<url>',at),end=s.indexOf('</url>',at)+6;
   if(start<0||end<6)throw new Error('V19.1 malformed Rotate sitemap entry');
   let block=s.slice(start,end);
-  block=/<lastmod>[^<]*<\\/lastmod>/.test(block)?block.replace(/<lastmod>[^<]*<\\/lastmod>/,'<lastmod>2026-11-24</lastmod>'):block.replace('</url>','<lastmod>2026-11-24</lastmod></url>');
+  block=/<lastmod>[^<]*<\/lastmod>/.test(block)?block.replace(/<lastmod>[^<]*<\/lastmod>/,'<lastmod>2026-11-24</lastmod>'):block.replace('</url>','<lastmod>2026-11-24</lastmod></url>');
   s=s.slice(0,start)+block+s.slice(end);
  }
  return s;
