@@ -15,7 +15,7 @@ const checks=[
  ['/guides',s=>s.includes('href="/guides/qr-code-guide"')&&s.includes('href="/guides/image-optimization-guide"')],
  ['/guides/qr-code-guide',s=>s.includes('data-editorial-wave3="qr-code"')&&!/name=["']robots["'][^>]*noindex/i.test(s)],
  ['/guides/image-optimization-guide',s=>s.includes('data-editorial-wave3="image-optimization"')&&!/name=["']robots["'][^>]*noindex/i.test(s)],
- ['/tools/rotate-pdf',s=>!/<meta\\b[^>]*name=["']robots["'][^>]*noindex/i.test(s)]
+ ['/tools/rotate-pdf',s=>!/<meta\b[^>]*name=["']robots["'][^>]*noindex/i.test(s)]
 ];
 async function get(route){
  const r=await fetch(BASE+route,{redirect:'follow',headers:{'User-Agent':'DocMivo-GitHub-Production-QA/1.0','Accept':'text/html,text/plain,*/*'},signal:AbortSignal.timeout(20000)});
