@@ -82,7 +82,7 @@ await check('PDF workflow guide offers useful interactive checklists on mobile',
   const first=p.locator('#too-large .wf-steps input[type="checkbox"]').first();
   await first.check();
   assert.match(await p.locator('#too-large .wf-progress').innerText(),/1 من 4/);
-  assert.match(await p.locator('#wrong-order .wf-progress').innerText(),/0 من 4/);
+  assert.match((await p.locator('#wrong-order .wf-progress').textContent())||'',/0 من 4/);
   assert.equal(await p.locator('link[rel="canonical"]').getAttribute('href'), 'https://getdocmivo.com/guides/pdf-workflows');
   const size=await p.evaluate(()=>({viewport:window.innerWidth,scroll:document.documentElement.scrollWidth}));
   assert.ok(size.scroll<=size.viewport+2,'Workflows mobile overflow '+JSON.stringify(size));
