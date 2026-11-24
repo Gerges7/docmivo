@@ -29,6 +29,10 @@ test('strips ads from noindex, legal, paused and unavailable-tool pages',()=>{
   ['terms.html',page()],
   ['contact.html',page()],
   ['guides/word-to-pdf-guide.html',page()],
+  ['guides/searchable-ocr-guide.html',page()],
+  ['guides/pdfa-guide.html',page()],
+  ['guides/repair-pdf-guide.html',page()],
+  ['guides/office-fonts-pdf-guide.html',page()],
   ['v17-preview/index.html',page()]
  ]){
   const out=scopeAdSensePage(html,rel,publisher);
