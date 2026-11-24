@@ -104,10 +104,6 @@ export function enhanceGuide(html,relative){
   out=out.replace(/<meta\b(?=[^>]*\bname=["']robots["'])(?=[^>]*\bcontent=["'][^"']*\bnoindex\b)[^>]*>/i,'');
   if(!/آخر تحديث:\s*24 نوفمبر 2026/.test(out))out=out.replace(/(<h1\b[^>]*>[\s\S]*?<\/h1>)/i,'$1<p class="guide-updated">آخر تحديث: 24 نوفمبر 2026</p>');
  }
- if(!/آخر تحديث:\s*24 نوفمبر 2026/.test(out)&&relative==='guides/image-optimization-guide.html'){
-  out=out.replace(/(<h1\b[^>]*>[\s\S]*?<\/h1>)/i,'$1<p class="guide-updated">آخر تحديث: 24 نوفمبر 2026</p>');
- }
- return out;
 }
 export function applyEditorialWave3(dist){
  const sitemapPath=path.join(dist,'sitemap.xml');
@@ -120,10 +116,10 @@ export function applyEditorialWave3(dist){
   const before=fs.readFileSync(file,'utf8');
   const after=enhanceGuide(before,relative);
   if(after!==before)changed.push([file,after]);
-  const loc='<loc>https://getdocmivo.com/'+relative.replace(/^guides\\//,'guides/').replace(/\\.html$/,'')+'</loc>';
+  const loc='<loc>https://getdocmivo.com/'+relative.replace(/^guides\//,'guides/').replace(/\.html$/,'')+'</loc>';
   if(!sitemap.includes(loc)){
    if(!NEW_INDEXABLE_GUIDES.has(relative))throw new Error('Editorial wave 3: missing sitemap entry '+relative);
-   sitemap=sitemap.replace('</urlset>','  <url>'+loc+'<lastmod>2026-11-24</lastmod></url>\\n</urlset>');
+   sitemap=sitemap.replace('</urlset>','  <url>'+loc+'<lastmod>2026-11-24</lastmod></url>\n</urlset>');
   }
   sitemap=updateLastmod(sitemap,relative);
  }
