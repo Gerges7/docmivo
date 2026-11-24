@@ -72,6 +72,25 @@ await check('Homepage, search, and mobile navigation without horizontal overflow
   await p.screenshot({path:path.join(OUT,'home-mobile.png'),fullPage:true});
  }finally{await p.close();}
 });
+await check('PDF workflow guide offers useful interactive checklists on mobile',async()=>{
+ const p=await pageAt('/guides/pdf-workflows',390);
+ try{
+  assert.match(await p.title(),/اختيار أداة PDF/);
+  assert.equal(await p.locator('.wf-item').count(),6);
+  assert.equal(await p.locator('.wf-steps input[type="checkbox"]').count(),24);
+  assert.equal(await p.locator('input[type="file"]').count(),0);
+  const first=p.locator('#too-large .wf-steps input[type="checkbox"]').first();
+  await first.check();
+  assert.match(await p.locator('#too-large .wf-progress').innerText(),/1 من 4/);
+  assert.match((await p.locator('#wrong-order .wf-progress').textContent())||'',/0 من 4/);
+  assert.equal(await p.locator('link[rel="canonical"]').getAttribute('href'), 'https://getdocmivo.com/guides/pdf-workflows');
+  const size=await p.evaluate(()=>({viewport:window.innerWidth,scroll:document.documentElement.scrollWidth}));
+  assert.ok(size.scroll<=size.viewport+2,'Workflows mobile overflow '+JSON.stringify(size));
+  await p.locator('.wf-item#privacy summary').click();
+  assert.ok(await p.locator('#privacy .wf-body').isVisible());
+ } finally {await p.close();}
+});
+
 await check('QR generates a nonblank image and downloadable PNG/SVG',async()=>{
  const p=await pageAt('/tools/qr-code');
  try{
