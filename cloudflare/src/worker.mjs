@@ -1,3 +1,4 @@
+import {handleMonetizationRequest,readMonetizationConfig,hasActivePlacementForPath,isEligibleMonetizationPath,requiresTcfForCountry} from './monetization.mjs';
 /** DocMivo Cloudflare Worker. Static HTML stays in ./dist; APIs run at the edge. */
 const CONVERTER_MODES = new Set([
   'word_to_pdf','excel_to_pdf','powerpoint_to_pdf','protect_pdf','unlock_pdf',
@@ -200,8 +201,9 @@ function securityHeaders(request,response){
   headers.set('Referrer-Policy','strict-origin-when-cross-origin');
   headers.set('Permissions-Policy','camera=(), microphone=(), geolocation=()');
   headers.delete('X-Powered-By');
-  if(new URL(request.url).hostname.endsWith('.workers.dev')) headers.set('X-Robots-Tag','noindex, nofollow');
-  if(request.url.includes('/api/'))headers.set('Cache-Control','no-store, max-age=0');
+  const requestUrl=new URL(request.url);
+  if(requestUrl.hostname.endsWith('.workers.dev')||requestUrl.pathname.startsWith('/admin/monetization'))headers.set('X-Robots-Tag','noindex, nofollow');
+  if(requestUrl.pathname.includes('/api/')||requestUrl.pathname.startsWith('/admin/monetization'))headers.set('Cache-Control','no-store, max-age=0');
   return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
 }
 export default {
@@ -214,10 +216,21 @@ export default {
     if(u.pathname==='/api/converter_token')response=await converterToken(request,env);
     else if(u.pathname==='/api/convert')response=await convertProxy(request,env);
     else if(u.pathname==='/api/ai')response=await ai(request,env);
+    else if(u.pathname.startsWith('/api/monetization/'))response=await handleMonetizationRequest(request,env);
     else if(u.pathname==='/api/health')response=json({ok:true,service:'docmivo-cloudflare',ai:aiReady(env),converter:converterReady(env)});
     else if(request.method!=='GET'&&request.method!=='HEAD') response=err('Method not allowed.',405);
-    else if(env.ASSETS?.fetch) response=await env.ASSETS.fetch(request);
-    else response=err('Static assets binding is missing.',503);
+    else if(env.ASSETS?.fetch){
+      response=await env.ASSETS.fetch(request);
+      const contentType=response.headers.get('content-type')||'';
+      if(request.method==='GET'&&response.status===200&&/text\/html/i.test(contentType)&&isEligibleMonetizationPath(u.pathname)){
+        const adsConfig=await readMonetizationConfig(env);
+        if(hasActivePlacementForPath(adsConfig,u.pathname)){
+          const country=request.cf&&request.cf.country?request.cf.country:'';
+          const requiresTcf=requiresTcfForCountry(country);
+          response=new HTMLRewriter().on('body',{element(element){element.setAttribute('data-ads-enabled','true');element.setAttribute('data-ads-requires-tcf',requiresTcf?'true':'false');}}).transform(response);
+        }
+      }
+    }else response=err('Static assets binding is missing.',503);
     return securityHeaders(request,response);
   }
 };

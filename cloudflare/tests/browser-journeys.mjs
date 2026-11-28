@@ -72,6 +72,23 @@ await check('Homepage, search, and mobile navigation without horizontal overflow
   await p.screenshot({path:path.join(OUT,'home-mobile.png'),fullPage:true});
  }finally{await p.close();}
 });
+await check('Consent defaults to denied and can be reopened without blocking PDF tools',async()=>{
+ const p=await pageAt('/',390);
+ try{
+  const banner=p.locator('.dm-consent-banner');
+  await banner.waitFor({state:'visible'});
+  const defaults=await p.evaluate(()=>window.dataLayer.map(x=>Array.from(x)));
+  assert.ok(defaults.some(x=>x[0]==='consent'&&x[1]==='default'&&x[2]?.analytics_storage==='denied'&&x[2]?.ad_storage==='denied'));
+  await p.locator('[data-consent-reject]').click();
+  await p.waitForFunction(()=>JSON.parse(localStorage.getItem('docmivo:consent:v1')||'null')?.ads===false);
+  await p.goto(BASE+'/tools/merge-pdf',{waitUntil:'domcontentloaded'});
+  assert.equal(await p.locator('.dm-consent-banner').count(),0,'Consent banner should not cover interactive tool pages');
+  assert.equal(await p.locator('script[src*="adsbygoogle.js"]').count(),0);
+  assert.equal(await p.locator('script[src*="highperformanceformat.com"]').count(),0);
+  await p.locator('#privacy-settings-link').click();
+  await p.locator('.dm-consent-banner').waitFor({state:'visible'});
+ }finally{await p.close();}
+});
 await check('PDF workflow guide offers useful interactive checklists on mobile',async()=>{
  const p=await pageAt('/guides/pdf-workflows',390);
  try{

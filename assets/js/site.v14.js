@@ -30,14 +30,5 @@
    }).catch(()=>{backendCards.forEach(c=>c.dataset.backendHidden='1');filter();});
  }
 
- // Google CMP consent-revocation link: reveal only when applicable.
- const privacyLink=document.getElementById('privacy-settings-link');
- if(privacyLink){
-   window.googlefc=window.googlefc||{};
-   window.googlefc.callbackQueue=window.googlefc.callbackQueue||[];
-   privacyLink.addEventListener('click',(e)=>{e.preventDefault();try{window.googlefc?.showRevocationMessage?.();}catch{}});
-   window.googlefc.callbackQueue.push({'CONSENT_API_READY':()=>{
-     try{if(typeof window.__tcfapi!=='function')return;window.__tcfapi('addEventListener',2,(tcdata,success)=>{if(success&&tcdata&&tcdata.gdprApplies) privacyLink.style.display='block';});}catch{}
-   }});
- }
+ // Consent preferences are managed by the first-party DocMivo consent manager.
 })();

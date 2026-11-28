@@ -15,3 +15,7 @@
 # Canonical https://getdocmivo.com is indexable; the test workers.dev URL is not.
 https://:version.:subdomain.workers.dev/*
   X-Robots-Tag: noindex, nofollow
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store

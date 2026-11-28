@@ -88,10 +88,13 @@ export function build(){
   const homePath=path.join(dist,'index.html');
   fs.writeFileSync(homePath,addHomeTools(fs.readFileSync(homePath,'utf8')));
   const required=['index.html','404.html','robots.txt','sitemap.xml','ads.txt','tools/merge-pdf/index.html',
-    'tools/qr-code/index.html','assets/js/vendor/docmivo-qr-engine.js'];
+    'tools/qr-code/index.html','assets/js/vendor/docmivo-qr-engine.js','assets/js/consent-manager.js',
+    'assets/js/monetization.js','admin/monetization/index.html'];
   required.forEach(f=>assert(fs.existsSync(path.join(dist,f)),'Missing output '+f));
   const qr=fs.readFileSync(path.join(dist,'tools/qr-code/index.html'),'utf8');
   assert(qr.includes('docmivo-qr-engine.js')&&!qr.includes('qrcode@1.5.4/lib/browser.min.js'),'QR local vendor was not applied');
+  const admin=fs.readFileSync(path.join(dist,'admin/monetization/index.html'),'utf8');
+  assert(/name=[\"']robots[\"'][^>]*noindex/i.test(admin),'Monetization admin must remain noindex');
   assert(!fs.existsSync(path.join(dist,'api'))&&!fs.existsSync(path.join(dist,'cloudrun')),'Backend source leaked into public assets');
   console.log('DocMivo Cloudflare build OK:',walkFiles(dist).length,'public static files, no backend exposed.');
 }

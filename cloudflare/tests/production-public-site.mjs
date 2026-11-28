@@ -46,40 +46,38 @@ await check('Production health reports Cloudflare Worker',async()=>{
  assert.match(headers.get('content-type')||'',/application\/json/i);
  console.log('INFO: converter='+h.converter+'; AI='+h.ai);
 });
-await check('AdSense publisher identity, seller authorization and verified crawler access',async()=>{
+await check('Ad networks stay disabled until approval and explicit consent',async()=>{
  const ads=(await fetchText('/ads.txt')).body;
- const record=ads.match(/^google\.com,\s*pub-(\d{10,24}),\s*DIRECT,\s*f08c47fec0942fa0\s*$/im);
- assert.ok(record,'Missing valid direct Google seller record');
+ assert.match(ads,/^google\.com,\s*pub-\d{10,24},\s*DIRECT,\s*f08c47fec0942fa0\s*$/im,'Existing Google seller record must remain valid');
  const home=(await fetchText('/')).body;
- const accountTag=[...home.matchAll(/<meta\b[^>]*>/gi)].map(x=>x[0]).find(x=>/name=["']google-adsense-account["']/i.test(x));
- const publisher=accountTag?.match(/content=["']ca-pub-(\d+)["']/i)?.[1];
- assert.ok(publisher,'Missing AdSense ownership meta tag on homepage');
- assert.equal(record[1],publisher,'ads.txt publisher ID does not match site verification ID');
- assert.ok(home.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'AdSense verification script missing from homepage');
- const activeTool=(await fetchText('/tools/qr-code')).body;
- const activeImageTool=(await fetchText('/tools/image-resize')).body;
- const activeGuide=(await fetchText('/guides/pdf-workflows')).body;
- assert.ok(activeTool.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'QR tool page missing AdSense code');
- assert.ok(activeImageTool.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Image resize page missing AdSense code');
- assert.ok(activeGuide.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Monetized guide missing AdSense code');
+ assert.match(home,/name=["']google-adsense-account["']/i,'AdSense ownership meta should remain on homepage');
+ assert.doesNotMatch(home,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'AdSense loader must not run before approval');
+ assert.match(home,/consent-manager\.js/,'First-party consent manager missing');
+ assert.match(home,/monetization\.js/,'Eligible homepage ad manager missing');
+ assert.match(home,/data-ad-placement=["']home["']/,'Homepage banner placeholder missing');
+ const hub=(await fetchText('/guides')).body;
+ assert.match(hub,/data-ad-placement=["']guidesHub["']/,'Guides hub placement missing');
+ assert.match(hub,/monetization\.js/,'Guides hub manager missing');
+ const article=(await fetchText('/guides/merge-pdf-guide')).body;
+ assert.match(article,/data-ad-placement=["']guideArticle["']/,'Editorial article placement missing');
+ assert.match(article,/monetization\.js/,'Article manager missing');
+ for(const route of ['/tools/merge-pdf','/tools/qr-code','/tools/image-resize','/tools/compress-pdf']){
+  const page=(await fetchText(route)).body;
+  assert.doesNotMatch(page,/monetization\.js|adsbygoogle\.js|highperformanceformat\.com/i,'Interactive tool must remain ad-free: '+route);
+ }
+ for(const route of ['/privacy','/cookies','/terms','/contact','/about']){
+  const page=(await fetchText(route)).body;
+  assert.doesNotMatch(page,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js|highperformanceformat\.com/i,'Legal/support page must not load ad network code: '+route);
+ }
+ const admin=(await fetchText('/admin/monetization')).body;
+ assert.match(admin,/name=["']robots["'][^>]*noindex/i,'Monetization admin must be noindex');
  const robots=(await fetchText('/robots.txt')).body;
- assert.match(robots,/User-agent:\s*Mediapartners-Google\s*\nAllow:\s*\//i,'AdSense ads crawler is not explicitly allowed');
- assert.match(robots,/User-agent:\s*Google-Display-Ads-Bot\s*\nAllow:\s*\//i,'AdSense site verification crawler is not explicitly allowed');
+ assert.match(robots,/User-agent:\s*Mediapartners-Google\s*\nAllow:\s*\//i);
  assert.match(robots,/https:\/\/getdocmivo\.com\/sitemap\.xml/i);
  assert.ok(!/^Disallow:\s*\/\s*$/m.test(robots),'robots.txt blocks entire site');
- const privacy=(await fetchText('/privacy')).body;
- const cookies=(await fetchText('/cookies')).body;
- assert.match(privacy,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Privacy page must keep the Google consent interface');
- assert.match(cookies,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Cookie settings page must keep the Google consent interface');
- const contact=(await fetchText('/contact')).body;
- assert.doesNotMatch(contact,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Contact page should not request ads');
- for(const route of ['/terms','/guides/word-to-pdf-guide','/guides/searchable-ocr-guide','/guides/pdfa-guide','/guides/repair-pdf-guide','/guides/office-fonts-pdf-guide']){
-  const page=(await fetchText(route)).body;
-  assert.doesNotMatch(page,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Non-monetized page unexpectedly requests ads: '+route);
- }
- const noindex=(await fetchText('/tools/add-text-pdf')).body;
- assert.match(noindex,/noindex/i);
- assert.doesNotMatch(noindex,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Noindex beta tool should not request ads');
+ const config=JSON.parse((await fetchText('/api/monetization/config?path=%2Fguides%2Fmerge-pdf-guide')).body);
+ assert.equal(config.enabled,false,'Public ad config must remain OFF until publisher approval');
+ assert.equal(config.requireConsent,true);
 });
 const sitemap=await fetchText('/sitemap.xml').then(r=>r.body).catch(e=>{failures.push({name:'Sitemap fetch',reason:e.message});return '';});
 const urls=[...sitemap.matchAll(/<loc>\s*([^<]+)\s*<\/loc>/gi)].map(x=>x[1].replace(/&amp;/g,'&'));
@@ -109,32 +107,24 @@ let cursor=0;const workers=Array.from({length:3},async()=>{
  }
 });
 await Promise.all(workers);
-await check('AdSense publisher code is present on exactly 43 eligible sitemap pages',async()=>{
- const adUrls=targets.filter(url=>pageBodies.get(url)?.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'));
- assert.equal(adUrls.length,43,'Unexpected AdSense code coverage: '+adUrls.length);
- for(const route of ['/contact','/terms','/guides/word-to-pdf-guide','/guides/searchable-ocr-guide','/guides/pdfa-guide','/guides/repair-pdf-guide','/guides/office-fonts-pdf-guide']){
-  const body=pageBodies.get(BASE+route);
-  assert.ok(body,'Missing audited page body: '+route);
-  assert.doesNotMatch(body,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Non-monetized page unexpectedly loads AdSense: '+route);
+await check('every indexed page is free of active third-party ad scripts by default',async()=>{
+ for(const url of targets){
+  const body=pageBodies.get(url)|| (await fetchText(url)).body;
+  assert.doesNotMatch(body,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js|highperformanceformat\.com|resources\.infolinks\.com|contextual\.media\.net/i,'Unexpected active ad script: '+url);
  }
- console.log('INFO: AdSense loader is present on '+adUrls.length+' of '+targets.length+' sitemap URLs.');
+ console.log('INFO: ad network scripts are absent from all '+targets.length+' sitemap pages until explicit activation.');
 });
-await check('Audited tools are indexable and monetized; beta tools remain excluded',async()=>{
- const home=(await fetchText('/')).body;
- const tag=[...home.matchAll(/<meta\b[^>]*>/gi)].map(x=>x[0]).find(x=>/name=["']google-adsense-account["']/i.test(x));
- const publisher=tag?.match(/content=["']ca-pub-(\d+)["']/i)?.[1];
- assert.ok(publisher,'Publisher ID unavailable for page-scope audit');
- const monetized=['/tools/qr-code','/tools/image-resize','/tools/merge-pdf','/tools/compress-pdf','/tools/sign-pdf','/tools/watermark-pdf','/tools/ocr-pdf','/tools/rotate-pdf'];
- for(const route of monetized){
+await check('interactive tools remain indexable where approved but never request ad scripts',async()=>{
+ const monetizationExcluded=['/tools/qr-code','/tools/image-resize','/tools/merge-pdf','/tools/compress-pdf','/tools/sign-pdf','/tools/watermark-pdf','/tools/ocr-pdf','/tools/rotate-pdf'];
+ for(const route of monetizationExcluded){
   const page=(await fetchText(route)).body;
-  assert.ok(!/<meta\b(?=[^>]*\bname=["']robots["'])(?=[^>]*\bcontent=["'][^"']*noindex)/i.test(page),'Verified tool unexpectedly noindex: '+route);
-  assert.ok(page.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-'+publisher),'Verified tool missing AdSense code: '+route);
-  assert.ok(urls.includes(BASE+route),'Verified tool missing from sitemap: '+route);
+  assert.doesNotMatch(page,/monetization\.js|adsbygoogle\.js|highperformanceformat\.com/i,'Tool must not load ads: '+route);
+  assert.ok(!page.includes('data-ad-placement='),'Tool must not contain ad slot: '+route);
  }
  for(const route of ['/tools/image-compress','/tools/add-text-pdf','/tools/pdf-to-powerpoint']){
   const page=(await fetchText(route)).body;
   assert.match(page,/noindex/i,'Untested beta tool should remain noindex: '+route);
-  assert.doesNotMatch(page,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/,'Untested beta tool should not load ads: '+route);
+  assert.doesNotMatch(page,/monetization\.js|adsbygoogle\.js/i,'Untested beta tool must not load ads: '+route);
   assert.ok(!urls.includes(BASE+route),'Untested beta tool must not be in sitemap: '+route);
  }
 });
