@@ -38,9 +38,9 @@ jobs:
         run: |
           node --check tests/production-public-site.mjs
           npm run build
-      - name: Wait for the AdSense configuration to reach Cloudflare production
+      - name: Wait for the monetization-safe configuration to reach Cloudflare production
         run: node tests/wait-for-production-adsense.mjs
-      - name: Check live health, every sitemap page, SEO integrity and AdSense files
+      - name: Check live health, every sitemap page, SEO integrity and monetization safeguards
         run: |
           set -o pipefail
           node tests/production-public-site.mjs 2>&1 | tee production-public-audit.log

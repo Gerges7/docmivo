@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="same-origin">
+<title>إدارة الإعلانات | DocMivo</title>
+<style>
+:root{color-scheme:light;--ink:#18213b;--muted:#64708a;--line:#e3e7f0;--bg:#f5f7fb;--brand:#5952dc;--green:#16845b;--red:#bd3d4a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{width:min(1120px,calc(100% - 28px));margin:34px auto 70px}
+header{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:22px}h1{font-size:clamp(25px,4vw,34px);margin:0}h2{font-size:19px;margin:0 0 13px}h3{font-size:15px;margin:0 0 8px}
+.sub{color:var(--muted);margin:5px 0 0}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin:14px 0;box-shadow:0 8px 26px rgba(26,38,74,.04)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field{display:grid;gap:6px;min-width:0}.field label{font-weight:750;font-size:13px}.field input,.field select,.field textarea{width:100%;border:1px solid #d7deeb;border-radius:9px;padding:10px 12px;background:#fff;color:var(--ink);font:inherit;min-width:0}.field textarea{min-height:104px;resize:vertical;direction:ltr;text-align:left;font:12px/1.5 ui-monospace,monospace}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.check{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:13px}.check input{width:18px;height:18px;accent-color:var(--brand)}
+button{border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:800;cursor:pointer;background:var(--brand);color:white}button.secondary{background:#eef0f8;color:#303a56}button:disabled{opacity:.5;cursor:not-allowed}
+.status{padding:10px 13px;border-radius:10px;background:#f1f3f9;color:#46516b;font-size:13px;margin-top:12px;white-space:pre-wrap}.status.good{background:#eaf7f1;color:#126644}.status.bad{background:#fff0f1;color:#a12d3a}
+.pill{display:inline-flex;padding:4px 9px;border-radius:99px;background:#eef0f8;color:#49536c;font-size:11px;font-weight:800}.pill.off{background:#fff1e9;color:#a64e1c}.placement{border:1px solid var(--line);border-radius:12px;padding:15px;margin-top:12px}.placement-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.placement .grid{margin-top:12px}.help{color:var(--muted);font-size:12px;margin:5px 0 0}.provider-fields{margin-top:14px}.provider-fields[hidden]{display:none}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}.metric{border:1px solid var(--line);border-radius:12px;padding:12px}.metric small{display:block;color:var(--muted);font-size:11px}.metric strong{font-size:21px;direction:ltr;display:block;overflow-wrap:anywhere}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:start;padding:10px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-size:12px}
+code{direction:ltr;display:inline-block;background:#f0f2f8;padding:2px 5px;border-radius:4px}
+.networks{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.network{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12px}.network b{display:block;font-size:13px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.networks{grid-template-columns:repeat(2,minmax(0,1fr))}header{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<main>
+<header><div><span class="pill">PRIVATE ADMIN · NOINDEX</span><h1>إدارة تحقيق الدخل — DocMivo</h1><p class="sub">إعدادات الشبكات الإعلانية والتقارير الفعلية. جميع الإعلانات متوقفة افتراضيًا.</p></div><a href="/" style="color:var(--brand);font-weight:800">العودة للموقع ←</a></header>
+
+<section class="card">
+<h2>1. الاتصال الآمن</h2>
+<div class="grid">
+ <div class="field"><label for="admin-token">مفتاح إدارة الإعلانات (Cloudflare Secret)</label><input id="admin-token" type="password" autocomplete="off" placeholder="أدخل ADS_ADMIN_TOKEN"></div>
+ <div class="field"><label>حالة النظام</label><div class="row"><span class="pill off" id="storage-state">لم يتم الاتصال</span><span class="pill off" id="api-state">تقارير Adsterra غير متصلة</span></div><p class="help">لا يتم حفظ المفتاح في المتصفح أو Local Storage.</p></div>
+</div>
+<div class="row" style="margin-top:14px"><button id="connect">اتصال وقراءة الإعدادات</button><button class="secondary" id="disconnect">مسح المفتاح</button></div>
+<div id="connection-message" class="status" role="status">أضف KV binding باسم ADS_CONFIG_KV وSecret باسم ADS_ADMIN_TOKEN في Cloudflare لتفعيل الحفظ.</div>
+</section>
+
+<section class="card">
+<h2>2. التحكم العام والشبكة</h2>
+<div class="grid">
+ <label class="check"><input type="checkbox" id="global-enabled"> تفعيل جميع الإعلانات (Feature Flag)</label>
+ <div class="field"><label for="active-provider">الشبكة النشطة لهذا الموقع</label><select id="active-provider"><option value="adsterra">Adsterra — Banner فقط</option><option value="adsense">Google AdSense</option><option value="infolinks">Infolinks — محتوى نصي</option><option value="mediaNet">Media.net — Display</option><option value="monetag">Monetag — غير متاح وفق قيود التنسيقات الحالية</option></select></div>
+</div>
+<div class="row" style="margin-top:14px">
+ <label class="check"><input type="checkbox" id="provider-enabled"> تفعيل الشبكة المختارة</label>
+ <label class="check"><input type="checkbox" id="provider-approved"> أؤكد أن الشبكة وافقت على DocMivo وهذا النطاق</label>
+</div>
+<div id="provider-fields" class="provider-fields">
+ <div class="field" data-provider-fields="adsterra"><label for="adsterra-domain">Adsterra Domain ID (للتقارير)</label><input id="adsterra-domain" inputmode="numeric" placeholder="من لوحة Adsterra بعد الموافقة"></div>
+ <div class="field" data-provider-fields="adsense" hidden><label for="adsense-client">AdSense Client ID</label><input id="adsense-client" placeholder="ca-pub-..."></div>
+ <div class="grid" data-provider-fields="infolinks" hidden><div class="field"><label for="infolinks-pid">Infolinks Publisher ID</label><input id="infolinks-pid"></div><div class="field"><label for="infolinks-wsid">Website ID</label><input id="infolinks-wsid"></div><p class="help" style="grid-column:1/-1">استخدم InFrame فقط على صفحات المحتوى المكتبي، وأوقف InText وInFold وInTag من حساب Infolinks. لا يتم عرضه على الموبايل أو الأدوات.</p></div>
+ <div class="field" data-provider-fields="mediaNet" hidden><label for="medianet-cid">Media.net Customer ID</label><input id="medianet-cid"><p class="help">Desktop banner فقط؛ لا يتم تحميله على الموبايل.</p></div>
+ <div class="field" data-provider-fields="monetag" hidden><p class="help">تم تعطيل Monetag في هذا النظام لأن التنسيقات الرسمية الشائعة تشمل OnClick وPush وVignette/In-Page Push. لن نحمّلها. يمكن مراجعة أي تنسيق Banner ثابت آخر قبل إضافته.</p></div>
+</div>
+<p class="help">الموافقة على الشبكة مطلوبة منفصلة عن تشغيل النظام. لا يكفي إدخال كود الإعلان وحده لبدء العرض.</p>
+</section>
+
+<section class="card">
+<h2>3. أماكن الإعلانات — صفحات المحتوى فقط</h2>
+<p class="help">لا توجد وحدات إعلانية داخل أدوات معالجة PDF أو صفحات الخصوصية أو التواصل أو الإدارة. اختر جهاز العرض والصق الكود الذي تولّده الشبكة بعد الموافقة فقط.</p>
+<div id="placements"></div>
+</section>
+
+<section class="card">
+<h2>4. حفظ الإعدادات</h2>
+<div class="row"><button id="save">حفظ الإعدادات في Cloudflare KV</button><button class="secondary" id="refresh">إعادة تحميل الإعدادات</button></div>
+<div id="save-message" class="status" role="status">النظام متوقف افتراضيًا. لا تفعّل الإعلانات قبل موافقة الشبكة واختبار الوحدات.</div>
+</section>
+
+<section class="card">
+<h2>5. تقارير الشبكة والإيرادات</h2>
+<p class="help">الأرقام هنا تُجلب من Adsterra Publisher API فقط. لا يتم تقدير النقرات أو الأرباح محليًا. لا يتم تتبع نقرات المستخدمين داخل الموقع.</p>
+<div class="grid">
+ <div class="field"><label for="report-start">من تاريخ</label><input id="report-start" type="date"></div>
+ <div class="field"><label for="report-end">إلى تاريخ</label><input id="report-end" type="date"></div>
+</div>
+<div class="row" style="margin-top:14px"><button id="load-report">جلب التقرير الفعلي</button></div>
+<div class="metrics">
+ <div class="metric"><small>Impressions</small><strong id="m-impressions">—</strong></div>
+ <div class="metric"><small>Clicks</small><strong id="m-clicks">—</strong></div>
+ <div class="metric"><small>Revenue (USD)</small><strong id="m-revenue">—</strong></div>
+ <div class="metric"><small>RPM (USD)</small><strong id="m-rpm">—</strong></div>
+</div>
+<div style="overflow-x:auto"><table><thead><tr><th>Placement / Page</th><th>Impressions</th><th>Clicks</th><th>Revenue</th><th>RPM</th></tr></thead><tbody id="report-rows"><tr><td colspan="5">لا توجد تقارير محمّلة.</td></tr></tbody></table></div>
+<div id="report-message" class="status" role="status">يتطلب التقرير Secret باسم ADSTERRA_API_TOKEN وDomain ID فعلي.</div>
+</section>
+
+<section class="card">
+<h2>6. تقييم الشبكات للمشروعات</h2>
+<div class="networks">
+ <div class="network"><b>Adsterra</b><span>الخيار الأول لـDocMivo: Banner فقط بعد الموافقة.</span></div>
+ <div class="network"><b>AdSense</b><span>احتياطي مستقبلي بعد القبول وCMP معتمد.</span></div>
+ <div class="network"><b>Infolinks</b><span>أنسب لأدلة GoAcadio، وليس لأدوات PDF.</span></div>
+ <div class="network"><b>Media.net</b><span>أولوية منخفضة حتى يتوفر جمهور إنجليزي Tier‑1.</span></div>
+ <div class="network"><b>Monetag</b><span>موقوف بسبب التنسيقات المزعجة المستبعدة.</span></div>
+</div>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var token='',config=null,providerKeys=['adsterra','adsense','infolinks','monetag','mediaNet'];
+var placementInfo={home:{title:'الصفحة الرئيسية',path:'/',description:'بعد قسم المقدمة وقبل قائمة الأدوات.'},guidesHub:{title:'مركز الأدلة',path:'/guides',description:'بعد مقدمة صفحة الأدلة وقبل قائمة المقالات.'},guideArticle:{title:'داخل الدليل',path:'/guides/*',description:'بعد القسم الثاني داخل المقال.'}};
+var $=function(id){return document.getElementById(id);};
+function status(id,msg,kind){var el=$(id);el.textContent=msg;el.className='status'+(kind?' '+kind:'');}
+function auth(){return {'Authorization':'Bearer '+token};}
+function fmt(value,digits){if(value===null||value===undefined||!Number.isFinite(Number(value)))return '—';return Number(value).toLocaleString('en-US',{maximumFractionDigits:digits===undefined?2:digits});}
+function today(){return new Date().toISOString().slice(0,10);}
+function dateAgo(n){return new Date(Date.now()-n*86400000).toISOString().slice(0,10);}
+$('report-end').value=today();$('report-start').value=dateAgo(6);
+function renderPlacements(){
+ var host=$('placements');host.replaceChildren();
+ Object.keys(placementInfo).forEach(function(key){
+  var p=config&&config.placements&&config.placements[key]||{};
+  var info=placementInfo[key],box=document.createElement('div');box.className='placement';
+  var head=document.createElement('div');head.className='placement-head';
+  var title=document.createElement('div');title.innerHTML='<h3>'+info.title+'</h3><p class="help">'+info.path+' — '+info.description+'</p>';
+  var enabled=document.createElement('label');enabled.className='check';enabled.innerHTML='<input type="checkbox" id="'+key+'-enabled"> عرض هذا الموضع';
+  head.append(title,enabled);box.appendChild(head);
+  var toggles=document.createElement('div');toggles.className='row';toggles.style.marginTop='10px';
+  toggles.innerHTML='<label class="check"><input type="checkbox" id="'+key+'-desktop"> Desktop</label><label class="check"><input type="checkbox" id="'+key+'-mobile"> Mobile</label>';
+  box.appendChild(toggles);
+  var fields=document.createElement('div');fields.className='grid';
+  fields.innerHTML='<div class="field"><label for="'+key+'-placement-id">Adsterra Placement ID للتقارير</label><input id="'+key+'-placement-id" inputmode="numeric" placeholder="اختياري حتى توفره الشبكة"></div><div class="field"><label for="'+key+'-adsense-slot">AdSense Ad Slot ID</label><input id="'+key+'-adsense-slot" inputmode="numeric"></div><div class="field"><label for="'+key+'-medianet-tag">Media.net Tag ID</label><input id="'+key+'-medianet-tag"></div>';
+  box.appendChild(fields);
+  var codes=document.createElement('div');codes.className='grid';codes.style.marginTop='12px';
+  codes.innerHTML='<div class="field"><label for="'+key+'-desktop-code">Adsterra Desktop Banner Code</label><textarea id="'+key+'-desktop-code" spellcheck="false" placeholder="الصق كود Banner 728×90 الذي صدر من لوحة Adsterra"></textarea></div><div class="field"><label for="'+key+'-mobile-code">Adsterra Mobile Banner Code</label><textarea id="'+key+'-mobile-code" spellcheck="false" placeholder="الصق كود Banner 320×50 الذي صدر من لوحة Adsterra"></textarea></div>';
+  box.appendChild(codes);host.appendChild(box);
+  $(key+'-enabled').checked=p.enabled===true;$(key+'-desktop').checked=p.desktop!==false;$(key+'-mobile').checked=p.mobile!==false;
+  $(key+'-placement-id').value=p.placementId||'';$(key+'-adsense-slot').value=p.adSenseSlotId||'';$(key+'-medianet-tag').value=p.mediaNetTagId||'';
+  $(key+'-desktop-code').value=p.desktopCode||'';$(key+'-mobile-code').value=p.mobileCode||'';
+ });
+}
+function syncProviderFields(name){
+ if(!config||!config.providers[name])return;
+ var p=config.providers[name];p.enabled=$('provider-enabled').checked;p.approved=$('provider-approved').checked;
+ if(name==='adsterra')p.domainId=$('adsterra-domain').value.trim();
+ if(name==='adsense')p.clientId=$('adsense-client').value.trim();
+ if(name==='infolinks'){p.pid=$('infolinks-pid').value.trim();p.wsid=$('infolinks-wsid').value.trim();}
+ if(name==='mediaNet')p.cid=$('medianet-cid').value.trim();
+}
+function setProviderFields(){
+ var name=$('active-provider').value;
+ document.querySelectorAll('[data-provider-fields]').forEach(function(el){el.hidden=el.getAttribute('data-provider-fields')!==name;});
+ var p=config&&config.providers&&config.providers[name]||{};
+ $('provider-enabled').checked=p.enabled===true;$('provider-approved').checked=p.approved===true;
+ $('adsterra-domain').value=(config.providers.adsterra||{}).domainId||'';
+ $('adsense-client').value=(config.providers.adsense||{}).clientId||'';
+ $('infolinks-pid').value=(config.providers.infolinks||{}).pid||'';
+ $('infolinks-wsid').value=(config.providers.infolinks||{}).wsid||'0';
+ $('medianet-cid').value=(config.providers.mediaNet||{}).cid||'';
+}
+function collect(){
+ var name=$('active-provider').value;
+ config.enabled=$('global-enabled').checked;config.activeProvider=name;config.requireConsent=true;
+ syncProviderFields(name);
+ Object.keys(placementInfo).forEach(function(key){
+  var p=config.placements[key];p.enabled=$(key+'-enabled').checked;p.desktop=$(key+'-desktop').checked;p.mobile=$(key+'-mobile').checked;
+  p.placementId=$(key+'-placement-id').value.trim();p.adSenseSlotId=$(key+'-adsense-slot').value.trim();p.mediaNetTagId=$(key+'-medianet-tag').value.trim();
+  p.desktopCode=$(key+'-desktop-code').value;p.mobileCode=$(key+'-mobile-code').value;
+ });
+ return config;
+}
+async function connect(){
+ token=$('admin-token').value.trim();if(!token){status('connection-message','أدخل مفتاح الإدارة أولًا.','bad');return;}
+ try{
+  var response=await fetch('/api/monetization/admin/config',{headers:auth(),cache:'no-store'});
+  var data=await response.json();if(!response.ok)throw new Error(data.error||'فشل الاتصال.');
+  config=data.config;$('global-enabled').checked=config.enabled;$('active-provider').value=config.activeProvider;
+  setProviderFields();renderPlacements();
+  var health=await fetch('/api/monetization/admin/status',{headers:auth(),cache:'no-store'}).then(function(r){return r.json();});
+  $('storage-state').textContent=health.storageConfigured?'KV متصل':'KV غير مربوط';
+  $('storage-state').className='pill '+(health.storageConfigured?'':'off');
+  $('api-state').textContent=health.adsterraApiConfigured?'Adsterra API متصل':'Adsterra API غير متصل';
+  $('api-state').className='pill '+(health.adsterraApiConfigured?'':'off');
+  status('connection-message',health.storageConfigured?'تم الاتصال وقراءة الإعدادات.':'تمت قراءة الإعدادات، لكن الحفظ يحتاج ربط KV باسم ADS_CONFIG_KV.',health.storageConfigured?'good':'');
+ }catch(e){status('connection-message',e.message,'bad');}
+}
+$('connect').addEventListener('click',connect);
+$('disconnect').addEventListener('click',function(){token='';$('admin-token').value='';status('connection-message','تم مسح المفتاح من الذاكرة.','');});
+$('active-provider').addEventListener('change',function(){if(!config)return;var previous=config.activeProvider;syncProviderFields(previous);config.activeProvider=this.value;setProviderFields();});
+$('save').addEventListener('click',async function(){
+ if(!token||!config){status('save-message','اتصل أولًا بواجهة الإدارة.','bad');return;}
+ try{
+  var response=await fetch('/api/monetization/admin/config',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},auth()),body:JSON.stringify(collect())});
+  var data=await response.json();if(!response.ok)throw new Error(data.error||'فشل الحفظ.');
+  config=data.config;$('global-enabled').checked=config.enabled;setProviderFields();renderPlacements();
+  var checks=await Promise.all(['/','/guides','/guides/example'].map(function(path){return fetch('/api/monetization/config?path='+encodeURIComponent(path),{cache:'no-store'}).then(function(r){return r.json();});}));
+  var ready=checks.filter(function(x){return x.enabled;}).length;
+  status('save-message','تم حفظ الإعدادات. مواضع الصفحات الصالحة حاليًا: '+ready+'/3. '+(config.enabled&&ready===0?'لم يتم تفعيل أي وحدة: راجع موافقة الشبكة وكود Banner ومقاسه وPlacement IDs.':'حالة العرض تخضع أيضًا لموافقة المستخدم على الإعلانات.'),ready?'good':'');
+ }catch(e){status('save-message',e.message,'bad');}
+});
+$('refresh').addEventListener('click',connect);
+$('load-report').addEventListener('click',async function(){
+ if(!token){status('report-message','اتصل أولًا بمفتاح الإدارة.','bad');return;}
+ var start=$('report-start').value,end=$('report-end').value;
+ try{
+  var response=await fetch('/api/monetization/reports?start='+encodeURIComponent(start)+'&end='+encodeURIComponent(end),{headers:auth(),cache:'no-store'});
+  var data=await response.json();if(!response.ok)throw new Error(data.error||'فشل التقرير.');
+  if(!data.configured){status('report-message',data.message||'تقارير الشبكة غير مهيأة.','');return;}
+  var totals=data.totals||{};
+  $('m-impressions').textContent=fmt(totals.impressions,0);$('m-clicks').textContent=fmt(totals.clicks,0);
+  $('m-revenue').textContent=totals.revenue===null?'—':'$'+fmt(totals.revenue,4);
+  $('m-rpm').textContent=totals.rpm===null?'—':'$'+fmt(totals.rpm,4);
+  var body=$('report-rows');body.replaceChildren();
+  (data.rows||[]).forEach(function(row){
+   var tr=document.createElement('tr');
+   [row.page||row.placementId||'—',fmt(row.impressions,0),fmt(row.clicks,0),row.revenue===null?'—':'$'+fmt(row.revenue,4),row.rpm===null?'—':'$'+fmt(row.rpm,4)].forEach(function(value){var td=document.createElement('td');td.textContent=value;tr.appendChild(td);});
+   body.appendChild(tr);
+  });
+  if(!data.rows||!data.rows.length){var tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.textContent='لم تُرجع الشبكة صفوفًا لهذه الفترة.';tr.appendChild(td);body.appendChild(tr);}
+  var warningText=data.warnings&&data.warnings.length?' تحذير: تعذر جلب '+data.warnings.length+' موضع/مواضع.':'';
+  status('report-message','مصدر البيانات: '+data.source+' — الفترة '+data.period.start+' إلى '+data.period.end+'. الأرقام كما وردت من الشبكة.'+warningText, data.warnings&&data.warnings.length?'':'good');
+ }catch(e){status('report-message',e.message,'bad');}
+});
+$('active-provider').value='adsterra';
+})();
+</script>
+</body>
+</html>

@@ -90,16 +90,26 @@ export function improveToolPage(html,slug){
  out=out.replace('<section class="content-block v16-editorial">',qa+'<section class="content-block v16-editorial">');
  return out;
 }
-const CONTACT_ORIGINAL='DocMivo يستخدم Google AdSense للإعلانات.';
-const CONTACT_REPLACEMENT='DocMivo يسعى لاستيفاء متطلبات Google AdSense، وقد لا تكون الإعلانات مفعّلة حاليًا. وجود شيفرة التحقق من AdSense لا يعني أن الموقع حصل على الموافقة الإعلانية.';
+const CONTACT_ORIGINAL='الإعلانات متوقفة افتراضيًا، وقد نفعّل وحدات Banner من شبكة معتمدة بعد الموافقة على الموقع. لا نبيع مساحات إعلانية مباشرة حاليًا، ولا نطلب من المستخدمين الدفع مقابل الأدوات المجانية المنشورة في الموقع. لأي استفسار عن الخصوصية أو الإعلانات، يرجى توضيح ذلك في عنوان الرسالة.';
+const CONTACT_REPLACEMENT='الإعلانات متوقفة افتراضيًا. عند اعتماد الموقع لدى شبكة إعلانية وتفعيلها، قد نعرض وحدات Banner فقط في الصفحة الرئيسية والأدلة التحريرية. لا نبيع مساحات إعلانية مباشرة حاليًا، ولا نطلب من المستخدمين الدفع مقابل الأدوات المجانية. لأي استفسار عن الخصوصية أو الإعلانات، يرجى توضيح ذلك في عنوان الرسالة.';
 export function improveContactPage(html){
  if(String(html).split(CONTACT_ORIGINAL).length!==2)throw new Error('V19: contact AdSense claim not found or duplicated');
  return html.replace(CONTACT_ORIGINAL,CONTACT_REPLACEMENT);
 }
 export function validateAdsTxt(value){
- const s=String(value||'').replace(/\r/g,'').trim();
- // Google seller record: exact structure, prevent extra unapproved sellers.
- if(!/^google\.com,\s*pub-\d{10,24},\s*DIRECT,\s*f08c47fec0942fa0$/i.test(s))throw new Error('V19: ads.txt missing or malformed');
+ const lines=String(value||'').replace(/\r/g,'').split('\n').map(x=>x.trim()).filter(x=>x&&!x.startsWith('#'));
+ const google=lines.filter(line=>/^google\.com,\s*pub-\d{10,24},\s*DIRECT,\s*f08c47fec0942fa0$/i.test(line));
+ if(google.length!==1)throw new Error('V19: ads.txt must contain exactly one verified Google DIRECT seller record');
+ for(const line of lines){
+  const fields=line.split(',').map(x=>x.trim());
+  if(fields.length<3||fields.length>4)throw new Error('V19: malformed ads.txt seller row');
+  const domain=fields[0],account=fields[1],relationship=fields[2],cert=fields[3];
+  if(!/^(?:[a-z0-9-]+\.)+[a-z]{2,}$/i.test(domain)||!account||/\s/.test(account)||!['DIRECT','RESELLER'].includes(relationship.toUpperCase()))
+    throw new Error('V19: malformed ads.txt seller fields');
+  if(cert&&!/^[a-f0-9]{16}$/i.test(cert))throw new Error('V19: malformed ads.txt certification authority ID');
+  if(domain.toLowerCase()==='google.com'&&!/^google\.com,\s*pub-\d{10,24},\s*DIRECT,\s*f08c47fec0942fa0$/i.test(line))
+    throw new Error('V19: unverified Google seller row');
+ }
  return true;
 }
 export const EDITORIAL_CSS=`\n/* DocMivo V19 — per-tool, evidence-based Arabic help content */\n.dm-verified-editorial{line-height:1.85}\n.dm-verified-editorial li{margin-block:8px}\n.dm-verified-editorial p{margin:10px 0}\n.dm-editorial-qa{background:#f8fafc;border:1px solid #cbd5e1;border-inline-start:4px solid #635bff;border-radius:15px;padding:18px 21px}\n.dm-editorial-qa h2{font-size:clamp(1.1rem,2.5vw,1.4rem)}\n.dm-verified-editorial code{direction:ltr;display:inline-block;unicode-bidi:isolate;background:#eef2ff;padding:0 5px;border-radius:4px}\n@media(max-width:650px){.dm-editorial-qa{padding:15px}.dm-verified-editorial{line-height:1.75}}\n`;
