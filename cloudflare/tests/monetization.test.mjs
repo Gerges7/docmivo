@@ -178,3 +178,13 @@ test('Infolinks adapter is restricted to the non-overlay InFrame format and desk
   assert.equal(placement.format,'inframe');assert.equal(placement.mobile,false);assert.equal(placement.desktop,true);
   assert.deepEqual(getActivePlacements(cfg,'/tools/merge-pdf'),[]);
 });
+
+
+test('Media.net adapter is restricted to desktop banners and requires a real tag ID',()=>{
+  const cfg=defaultConfig();cfg.enabled=true;cfg.activeProvider='mediaNet';
+  cfg.providers.mediaNet.enabled=true;cfg.providers.mediaNet.approved=true;cfg.providers.mediaNet.cid='customer_123';
+  cfg.placements.guideArticle.enabled=true;cfg.placements.guideArticle.mediaNetTagId='tag_123';
+  const placement=getActivePlacements(cfg,'/guides/merge-pdf-guide')[0];
+  assert.equal(placement.desktop,true);assert.equal(placement.mobile,false);
+  assert.equal(placement.tagId,'tag_123');assert.equal(placement.cid,'customer_123');
+});
