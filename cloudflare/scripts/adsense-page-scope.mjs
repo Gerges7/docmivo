@@ -54,7 +54,7 @@ function addArticleSlot(html,rel){
   if(html.includes('data-ad-placement="guideArticle"'))return html;
   const start=html.indexOf('<article class="prose">');
   const marker='<div class="dm-ad-slot" data-ad-placement="guideArticle" aria-label="مساحة إعلانية"></div>';
-  if(start<0){const mainEnd=html.indexOf('</main>');return mainEnd>=0?html.slice(0,mainEnd)+marker+html.slice(mainEnd):html;}
+  if(start<0){const mainEnd=html.indexOf('</main>');if(mainEnd>=0)return html.slice(0,mainEnd)+marker+html.slice(mainEnd);const bodyEnd=html.lastIndexOf('</body>');if(bodyEnd>=0)return html.slice(0,bodyEnd)+marker+html.slice(bodyEnd);return html+marker;}
   const headings=[...html.slice(start).matchAll(/<h2\b[^>]*>/gi)];
   const chosen=headings[1]||headings[0];
   if(!chosen){const articleEnd=html.indexOf('</article>',start);return articleEnd>=0?html.slice(0,articleEnd)+marker+html.slice(articleEnd):html;}

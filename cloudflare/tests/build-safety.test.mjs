@@ -19,6 +19,9 @@ function fixture(){
  const repo=fs.mkdtempSync(path.join(os.tmpdir(),'docmivo-cf-'));
  fs.cpSync(kit,path.join(repo,'cloudflare'),{recursive:true,filter:(src)=>!src.includes('/dist/')});
  put(repo,'assets/js/tool-engine.v14.js',[parse,add,split,del,compress].join('\n'));
+ put(repo,'assets/js/consent-manager.js','/* consent manager fixture */');
+ put(repo,'assets/js/monetization.js','/* monetization manager fixture */');
+ put(repo,'cloudflare/cloudflare-overrides/admin/monetization/index.html','<html><head><meta name="robots" content="noindex,nofollow"></head><body>ADS_ADMIN_TOKEN</body></html>');
  put(repo,'assets/js/tools-data.v14.js','window.DOCMIVO_TOOLS=[]');
  put(repo,'tools/merge-pdf/index.html','<html><body>Merge</body></html>');
  put(repo,'tools/image-compress/index.html','<html><body>Image</body></html>');
